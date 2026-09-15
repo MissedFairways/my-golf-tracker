@@ -27,44 +27,49 @@ st.divider()
 # 3. BULLETPROOF NATIVE GPS CAPTURE
 st.subheader("2. Track Your Distance")
 
-# Hidden HTML text inputs using standard markdown container targeting
-# We use standard HTML input elements inside a clean container to bypass input index conflicts completely.
-gps_lat = st.text_input("Latitude", value="", key="lat_holder", label_visibility="collapsed")
-gps_lon = st.text_input("Longitude", value="", key="lon_holder", label_visibility="collapsed")
+# We create two query parameters to pass information directly between the browser session and Python
+# This completely eliminates standard text boxes so the JavaScript won't overwrite your buttons!
+query_params = st.query_params
 
-# Native browser HTML5 snippet that securely fetches GPS and injects it into Python via the matching Aria-labels
+current_lat_str = query_params.get("lat", "")
+current_lon_str = query_params.get("lon", "")
+
+# Native browser HTML5 snippet that securely fetches GPS and injects it back to Python via URL updates
 gps_js_code = """
 <script>
 function updateGPS() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
-            // Securely find our targeted input fields inside the webpage frame
-            const latInput = window.parent.document.querySelector('input[aria-label="Latitude"]');
-            const lonInput = window.parent.document.querySelector('input[aria-label="Longitude"]');
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
             
-            if (latInput && lonInput) {
-                latInput.value = position.coords.latitude;
-                latInput.dispatchEvent(new Event('input', { bubbles: true }));
-                
-                lonInput.value = position.coords.longitude;
-                lonInput.dispatchEvent(new Event('input', { bubbles: true }));
+            // Get the current web address
+            const url = new URL(window.parent.location.href);
+            
+            // Check if coordinates have actually changed before refreshing
+            if (url.searchParams.get("lat") !== lat.toString() || url.searchParams.get("lon") !== lon.toString()) {
+                url.searchParams.set("lat", lat);
+                url.searchParams.set("lon", lon);
+                // Update the app URL invisibly to feed the coordinates back to Python
+                window.parent.history.replaceState({}, "", url.toString());
+                window.parent.location.reload();
             }
         }, function(error) {
             console.log("GPS Error: " + error.message);
         }, {enableHighAccuracy: true, timeout: 5000});
     }
 }
-// Keep location fresh every 3 seconds
-setInterval(updateGPS, 3000);
+// Check for fresh coordinates every 4 seconds
+setInterval(updateGPS, 4000);
 updateGPS();
 </script>
 """
 st.components.v1.html(gps_js_code, height=0)
 
-# Process tracking ONLY if Safari successfully outputs coordinates into our secure fields
-if gps_lat and gps_lon:
-    current_lat = float(gps_lat)
-    current_lon = float(gps_lon)
+# Process tracking ONLY if Safari successfully outputs coordinates into our secure background parameters
+if current_lat_str and current_lon_str:
+    current_lat = float(current_lat_str)
+    current_lon = float(current_lon_str)
     
     col1, col2 = st.columns(2)
 
@@ -133,8 +138,9 @@ with col_clear2:
     if st.button("🗑️ Clear Entire Scorecard", use_container_width=True):
         st.session_state.tee_lat = None
         st.session_state.tee_lon = None
-        st.shot_history = []
+        st.session_state.shot_history = []
         st.rerun()
+
 
 
 
