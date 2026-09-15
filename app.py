@@ -77,6 +77,12 @@ st.markdown("""
             color: #000000 !important;            /* Solid black text for extreme contrast */
             box-shadow: 6px 6px 0px 0px #000000 !important; /* Flat stark drop shadow */
         }
+        
+        /* Interactive iOS Safari Tap Action Feedback */
+        div.stButton > button:active {
+            transform: translate(3px, 3px) !important;
+            box-shadow: 3px 3px 0px 0px #000000 !important;
+        }
 
         /* Forest Green Action Button (Click 1) */
         div.green-action-btn > div.stButton > button {
