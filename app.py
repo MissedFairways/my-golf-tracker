@@ -236,6 +236,42 @@ else:
     else:
         st.write("_No shots recorded yet for this round._")
 
+    # --- NEW FEATURE: CLUB AVERAGES TRACKER ---
+    st.divider()
+    st.subheader("📊 Your Club Averages")
+
+    if not shot_history_list:
+        st.markdown("""
+            <div style='background-color: #FFFFFF; border: 3px dashed #000000; padding: 15px; border-radius: 12px; text-align: center;'>
+                <p style='color: #555555; font-size: 18px; font-weight: 700; margin: 0;'>🏌️‍♂️ Track a few shots above to calculate your personal club averages!</p>
+            </div>
+        """, unsafe_allow_html=True)
+    else:
+        try:
+            club_data = []
+            for shot in shot_history_list:
+                # Safely pull numbers out of strings like "250 Yards"
+                raw_dist = str(shot["Distance"]).replace("Yards", "").strip()
+                dist_numeric = int(raw_dist)
+                club_data.append({"Club": shot["Club Used"], "Distance": dist_numeric})
+            
+            # Group data by club name and get the rounded mathematical average
+            math_df = pd.DataFrame(club_data)
+            avg_df = math_df.groupby("Club")["Distance"].mean().round().astype(int).reset_index()
+            # Sort from longest hitting club down to shortest hitting club
+            avg_df = avg_df.sort_values(by="Distance", ascending=False)
+            
+            # Display stats in clean high-contrast blocks easy to read under direct sunlight
+            for index, row in avg_df.iterrows():
+                st.markdown(f"""
+                    <div style='background-color: #FFFFFF; border: 3px solid #000000; border-radius: 12px; padding: 12px 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 4px 4px 0px 0px #000000;'>
+                        <span style='font-size: 20px; font-weight: 900; color: #000000;'>{row['Club']}</span>
+                        <span style='font-size: 22px; font-weight: 900; color: #2E7D32;'>{row['Distance']} YARDS</span>
+                    </div>
+                """, unsafe_allow_html=True)
+        except Exception as e:
+            st.error("Could not compute club statistics right now.")
+
     # 5. Reset Options
     st.divider()
     col_clear1, col_clear2 = st.columns(2)
@@ -256,6 +292,7 @@ else:
             st.session_state.shot_history = []
             st.session_state.gps_trigger += 1
             st.rerun()
+
 
 
 
