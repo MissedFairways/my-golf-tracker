@@ -25,9 +25,23 @@ else:
     if 'shot_history' not in st.session_state:
         st.session_state.shot_history = []
 
-    # NEW FEATURE: Club Selection Dropdown
+    # CUSTOM FEATURE: Your Exact Club Bag Layout
     st.subheader("1. Setup Your Shot")
-    club_options = ["Driver", "3-Wood", "5-Wood", "4-Iron", "5-Iron", "6-Iron", "7-Iron", "8-Iron", "9-Iron", "PW", "GW"]
+    club_options = [
+        "Driver", 
+        "Mini-Driver", 
+        "3-Wood", 
+        "4-Iron", 
+        "5-Iron", 
+        "6-Iron", 
+        "7-Iron", 
+        "8-Iron", 
+        "9-Iron", 
+        "Pitching Wedge", 
+        "Gap Wedge", 
+        "54° Wedge", 
+        "60° Wedge"
+    ]
     selected_club = st.selectbox("Which club are you hitting?", options=club_options)
 
     st.divider()
@@ -61,7 +75,7 @@ else:
                 # Show the massive result on screen
                 st.metric(label="🏌️‍♂️ Driving Distance", value=f"{distance_in_yards} Yards")
                 
-                # NEW FEATURE: Save the shot data to our history memory list
+                # Save the shot data to our history memory list
                 shot_number = len(st.session_state.shot_history) + 1
                 new_shot = {
                     "Shot #": shot_number,
@@ -77,7 +91,7 @@ else:
 
     st.divider()
 
-    # NEW FEATURE: Display the History Scorecard Table
+    # Display the History Scorecard Table
     st.subheader("📋 Your Shot History Scorecard")
     if st.session_state.shot_history:
         # Convert our memory list into a clean visual table
@@ -100,4 +114,5 @@ else:
             st.session_state.tee_lon = None
             st.session_state.shot_history = []
             st.rerun()
+
 
