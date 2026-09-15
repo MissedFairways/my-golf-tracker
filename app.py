@@ -4,8 +4,16 @@ import math
 import pandas as pd
 
 # 1. App Styling and Titles
-st.set_page_config(page_title="Golf Tracker", page_icon="⛳")
-st.title("⛳ My Advanced Golf Drive Tracker")
+st.set_page_config(page_title="GEN X DISTANCE TRACKER", page_icon="⛳")
+
+# --- TWO-LINE CENTERED MAIN HEADER ---
+st.markdown("""
+    <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="font-size: 2.8rem; font-weight: 900; line-height: 1.1; margin: 0; color: #111111;">
+            GEN X<br>DISTANCE TRACKER
+        </h1>
+    </div>
+""", unsafe_allow_html=True)
 
 # Create a master trigger key to force browser hardware updates
 if 'gps_trigger' not in st.session_state:
@@ -29,59 +37,23 @@ st.markdown("""
     <style>
         /* 1. Large, Easy-to-Tap Dropdown Menu */
         div[data-baseweb="select"] {
-            font-size: 1.4rem !important;
+            font-size: 1.6rem !important;
             font-weight: bold !important;
         }
         div[data-testid="stSelectbox"] label p {
-            font-size: 1.2rem !important;
+            font-size: 1.3rem !important;
             font-weight: bold !important;
         }
-
-        /* 2. Global Button Sizing & Massive Font Overrides */
-        div[data-testid="stButton"] button {
-            width: 100% !important;
-            padding: 24px 10px !important;    /* Thick, tall profile for quick thumb target */
-            font-size: 2.8rem !important;    /* Matches the exact font scale of the distance box */
-            font-weight: 900 !important;      /* Ultra-bold text */
-            border-radius: 16px !important;
-            border: none !important;
-            text-transform: uppercase !important;
-            letter-spacing: -1px !important;
-            transition: all 0.1s ease-in-out !important;
-        }
-
-        /* 3. True Solid Color Blocks with Clear Button Depth Shadows */
-        /* TEE OFF Button (Rich Forest Green) */
-        div.tee-off-btn-container div[data-testid="stButton"] button {
-            background-color: #1B5E20 !important; 
-            color: #FFFFFF !important;
-            box-shadow: 0px 8px 0px #0D260D, 0px 10px 20px rgba(0, 0, 0, 0.3) !important;
-        }
-        div.tee-off-btn-container div[data-testid="stButton"] button:active {
-            transform: translateY(4px) !important;
-            box-shadow: 0px 4px 0px #0D260D, 0px 6px 10px rgba(0, 0, 0, 0.3) !important;
-        }
-
-        /* AT BALL Button (Deep Golf Blue) */
-        div.at-ball-btn-container div[data-testid="stButton"] button {
-            background-color: #0D47A1 !important; 
-            color: #FFFFFF !important;
-            box-shadow: 0px 8px 0px #0A2244, 0px 10px 20px rgba(0, 0, 0, 0.3) !important;
-        }
-        div.at-ball-btn-container div[data-testid="stButton"] button:active {
-            transform: translateY(4px) !important;
-            box-shadow: 0px 4px 0px #0A2244, 0px 6px 10px rgba(0, 0, 0, 0.3) !important;
-        }
         
-        /* Processing / Disabled Button States */
-        div[data-testid="stButton"] button:disabled {
-            background-color: #E0E0E0 !important;
-            color: #9E9E9E !important;
-            box-shadow: none !important;
-            transform: none !important;
+        /* Hide the internal pipeline inputs from view */
+        div.element-container:has(div[data-testid="stTextInput"]) {
+            display: none !important;
+        }
+        div[data-testid="stTextInput"] {
+            display: none !important;
         }
 
-        /* 4. Large Distance Display Panel Box */
+        /* 2. Large Distance Display Panel Box */
         .distance-display-box {
             background-color: #FFFFFF;
             border: 4px solid #1B5E20;
@@ -105,6 +77,47 @@ st.markdown("""
             color: #1B5E20; 
             font-weight: 900;
             line-height: 1.0;
+        }
+
+        /* 3. Native Button Structural Styling Custom Overrides */
+        .native-golf-btn {
+            width: 100%;
+            padding: 20px 10px;
+            font-size: 2.8rem !important;
+            font-weight: 900;
+            border-radius: 16px;
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            color: #FFFFFF !important;
+            cursor: pointer;
+            display: block;
+            margin-bottom: 15px;
+            transition: all 0.05s ease-in-out;
+        }
+        /* Buttons are true solid Green and Blue color blocks now */
+        .btn-tee-off {
+            background-color: #1B5E20 !important;
+            box-shadow: 0px 8px 0px #0A1B0C, 0px 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        .btn-tee-off:active {
+            transform: translateY(4px);
+            box-shadow: 0px 4px 0px #0A1B0C, 0px 6px 10px rgba(0, 0, 0, 0.3);
+        }
+        .btn-at-ball {
+            background-color: #0D47A1 !important;
+            box-shadow: 0px 8px 0px #051B3D, 0px 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        .btn-at-ball:active {
+            transform: translateY(4px);
+            box-shadow: 0px 4px 0px #051B3D, 0px 6px 10px rgba(0, 0, 0, 0.3);
+        }
+        .btn-disabled {
+            background-color: #E0E0E0 !important;
+            color: #9E9E9E !important;
+            box-shadow: none !important;
+            cursor: not-allowed;
+            transform: none !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -172,26 +185,48 @@ else:
     # 4. Action Buttons
     st.subheader("2. Track Your Distance")
     
-    # Render stacked rows natively with wrapper div tags to capture green/blue CSS profiles
-    st.markdown('<div class="tee-off-btn-container">', unsafe_allow_html=True)
-    if st.button("TEE OFF", use_container_width=True, disabled=st.session_state.waiting_for_end_gps):
+    # Hidden native hooks used to receive actions from our custom color buttons safely
+    action_trigger_tee = st.button("INTERNAL_TEE", key="hidden_tee_btn", help="hidden")
+    action_trigger_ball = st.button("INTERNAL_BALL", key="hidden_ball_btn", help="hidden")
+    
+    # Render True solid Green & Blue blocks with matching font scaling text formatting
+    tee_disabled = "btn-disabled" if st.session_state.waiting_for_end_gps else ""
+    ball_disabled = "btn-disabled" if (st.session_state.tee_lat is None or st.session_state.waiting_for_end_gps) else ""
+    
+    st.markdown(f"""
+        <button id="html-tee-btn" class="native-golf-btn btn-tee-off {tee_disabled}" {"disabled" if tee_disabled else ""}>
+            TEE OFF
+        </button>
+        <button id="html-ball-btn" class="native-golf-btn btn-at-ball {ball_disabled}" {"disabled" if ball_disabled else ""}>
+            AT BALL
+        </button>
+        
+        <script>
+            // Target the hidden real Streamlit endpoints to fire python logic packets
+            const nativeTee = window.parent.document.querySelector('button[aria-label="INTERNAL_TEE"]');
+            const nativeBall = window.parent.document.querySelector('button[aria-label="INTERNAL_BALL"]');
+            
+            document.getElementById('html-tee-btn').addEventListener('click', () => {{
+                if(nativeTee) nativeTee.click();
+            }});
+            document.getElementById('html-ball-btn').addEventListener('click', () => {{
+                if(nativeBall) nativeBall.click();
+            }});
+        </script>
+    """, unsafe_allow_html=True)
+
+    # Process clicks arriving from the HTML buttons via the hidden bridge endpoints
+    if action_trigger_tee:
         st.session_state.tee_lat = current_lat
         st.session_state.tee_lon = current_lon
         st.session_state.gps_trigger += 1  
         st.session_state.last_calculated_distance = None
-        st.toast(f"🎯 Tee location saved for your {selected_club}!", icon="📍")
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
-    st.write("") # Clear symmetrical vertical spacer
-
-    st.markdown('<div class="at-ball-btn-container">', unsafe_allow_html=True)
-    if st.button("AT BALL", use_container_width=True, disabled=(st.session_state.tee_lat is None or st.session_state.waiting_for_end_gps)):
+    if action_trigger_ball:
         st.session_state.waiting_for_end_gps = True
         st.session_state.gps_trigger += 1  
-        st.toast("🛰️ Fetching new location...", icon="🔄")
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
     # --- PERSISTENT MAIN-SCREEN DISTANCE PANEL ---
     if st.session_state.last_calculated_distance is not None:
