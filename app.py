@@ -61,107 +61,111 @@ CLUB_BAG = [
 
 st.title("⛳ Golf Drive Tracker")
 
-# --- GEOLOCATION CONTROLLER VIA URL QUERY PARAMS ---
-# Read location parameters if they were injected into the URL by our buttons
-params = st.query_params
-
-if "lat" in params and "lon" in params and "action" in params:
-    lat = float(params["lat"])
-    lon = float(params["lon"])
-    action = params["action"]
-    
-    # Process actions cleanly on backend script execution pass
-    if action == "start":
-        st.session_state.start_coords = (lat, lon)
-        st.toast("Start location locked!", icon="🎯")
-    elif action == "end":
-        if st.session_state.start_coords is None:
-            st.error("Please mark a Start position first!")
-        else:
-            lat1, lon1 = st.session_state.start_coords
-            distance = calculate_haversine(lat1, lon1, lat, lon)
-            
-            shot_num = len(st.session_state.scorecard) + 1
-            new_shot = pd.DataFrame([{
-                "Shot #": int(shot_num), 
-                "Club Used": params.get("club", "Driver"), 
-                "Distance (Yds)": distance
-            }])
-            st.session_state.scorecard = pd.concat([st.session_state.scorecard, new_shot], ignore_index=True)
-            st.session_state.start_coords = None
-            st.toast(f"Shot tracked: {distance} Yds!", icon="🚀")
-            
-    # Instantly wipe query params to prevent reprocessing the same coordinates on user orientation changes
-    st.query_params.clear()
-    st.rerun()
-
-# --- LOW-OVERHEAD MOBILE GEOLOCATION BUTTON ---
-def geolocation_button(label, action_type, club_name=""):
-    html_code = f"""
-    <button id="geo-btn" style="
-        width: 100%; 
-        padding: 12px; 
-        background-color: #FF4B4B; 
-        color: white; 
-        border: none; 
-        border-radius: 10px; 
-        font-size: 16px; 
-        font-weight: bold;
-        cursor: pointer;">
-        {label}
-    </button>
-
+# --- BULLETPROOF SAFARI GEOLOCATION CONTROLLER ---
+# This passes data through the official Streamlit postMessage API instead of trying to force-refresh the parent window.
+def native_geo_bridge():
+    html_code = """
     <script>
-        const btn = document.getElementById('geo-btn');
-        btn.addEventListener('click', () => {{
-            if (!navigator.geolocation) {{
-                alert('Geolocation is not supported by your browser.');
-                return;
-            }}
-            
-            btn.innerText = "Locating...";
-            btn.style.backgroundColor = "#FFA0A0";
-            
-            navigator.geolocation.getCurrentPosition(
-                (position) => {{
-                    // Update URL params silently without browser context resets
-                    const u = new URL(window.top.location.href);
-                    u.searchParams.set('lat', position.coords.latitude);
-                    u.searchParams.set('lon', position.coords.longitude);
-                    u.searchParams.set('action', '{action_type}');
-                    u.searchParams.set('club', '{club_name}');
-                    
-                    // Replace state tells Streamlit window to look at new params quietly
-                    window.top.history.replaceState(null, null, u.toString());
-                    window.top.location.reload();
-                }},
-                (error) => {{
-                    alert('Location Error: ' + error.message);
-                    btn.innerText = "{label}";
-                    btn.style.backgroundColor = "#FF4B4B";
-                }},
-                {{
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
-                }}
-            );
-        }});
+    // System setup to establish safe Streamlit pipeline communications
+    function sendToStreamlit(data) {
+        window.parent.postMessage({
+            type: 'streamlit:setComponentValue',
+            value: data
+        }, '*');
+    }
+
+    // Event listener looking for instructions coming out of the rendering loop
+    window.addEventListener("message", function(event) {
+        if (event.data.type === "streamlit:render") {
+            const args = event.data.args;
+            if (args.trigger && args.trigger !== window.lastTrigger) {
+                window.lastTrigger = args.trigger;
+                
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        sendToStreamlit({
+                            lat: position.coords.latitude,
+                            lon: position.coords.longitude,
+                            action: args.action,
+                            ts: Date.now()
+                        });
+                    },
+                    (error) => {
+                        sendToStreamlit({ error: error.message, ts: Date.now() });
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            }
+        }
+    });
     </script>
     """
-    return components.html(html_code, height=55)
+    # Hidden engine component that runs smoothly in the background 
+    return components.html(html_code, height=0, width=0)
+
+# Render hidden background engine
+geo_data = native_geo_bridge()
+
+# --- BACKEND LOGIC DISPATCHER ---
+if geo_data and isinstance(geo_data, dict) and "ts" in geo_data:
+    # Ensure we are handling a brand new data packet to prevent processing loops
+    if "last_processed_ts" not in st.session_state or st.session_state.last_processed_ts != geo_data["ts"]:
+        st.session_state.last_processed_ts = geo_data["ts"]
+        
+        if "error" in geo_data:
+            st.error(f"GPS Error: {geo_data['error']}")
+        else:
+            lat, lon, action = geo_data["lat"], geo_data["lon"], geo_data["action"]
+            
+            if action == "start":
+                st.session_state.start_coords = (lat, lon)
+                st.toast("Start location locked!", icon="🎯")
+            elif action == "end":
+                if st.session_state.start_coords is None:
+                    st.error("Please mark a Start position first!")
+                else:
+                    lat1, lon1 = st.session_state.start_coords
+                    distance = calculate_haversine(lat1, lon1, lat, lon)
+                    
+                    shot_num = len(st.session_state.scorecard) + 1
+                    new_shot = pd.DataFrame([{
+                        "Shot #": int(shot_num), 
+                        "Club Used": st.session_state.get("selected_club_state", "Driver"), 
+                        "Distance (Yds)": distance
+                    }])
+                    st.session_state.scorecard = pd.concat([st.session_state.scorecard, new_shot], ignore_index=True)
+                    st.session_state.start_coords = None
+                    st.toast(f"Shot tracked: {distance} Yds!", icon="🚀")
+        st.rerun()
 
 # --- USER INTERFACE ---
-selected_club = st.selectbox("Select Club Used:", CLUB_BAG)
+selected_club = st.selectbox("Select Club Used:", CLUB_BAG, key="selected_club_state")
 
 col1, col2 = st.columns(2)
 with col1:
-    st.subheader("Step 1")
-    geolocation_button("📍 Mark Start Ball", "start", selected_club)
+    # Native button increments a click counter, telling our hidden engine to fetch GPS
+    if st.button("📍 Mark Start Ball"):
+        components.html(f"""
+            <script>
+            window.parent.postMessage({{
+                type: 'streamlit:render',
+                args: {{ trigger: {Date.now() if 'Date' in locals() else 1}, action: 'start' }}
+            }}, '*');
+            </script>
+        """, height=0, width=0)
+        st.toast("Locating start position...", icon="🛰️")
 
 with col2:
-    st.subheader("Step 2")
-    geolocation_button("⛳ Mark End Ball", "end", selected_club)
+    if st.button("⛳ Mark End Ball"):
+        components.html(f"""
+            <script>
+            window.parent.postMessage({{
+                type: 'streamlit:render',
+                args: {{ trigger: {Date.now() if 'Date' in locals() else 2}, action: 'end' }}
+            }}, '*');
+            </script>
+        """, height=0, width=0)
+        st.toast("Locating end position...", icon="🛰️")
 
 # --- DISPLAY CURRENT TARGETING STATE ---
 if st.session_state.start_coords:
@@ -180,10 +184,10 @@ if not st.session_state.scorecard.empty:
     if st.button("🗑️ Reset Round"):
         st.session_state.scorecard = pd.DataFrame(columns=["Shot #", "Club Used", "Distance (Yds)"])
         st.session_state.start_coords = None
-        st.query_params.clear()
         st.rerun()
 else:
     st.write("_No shots tracked yet for this round._")
+
 
 
 
