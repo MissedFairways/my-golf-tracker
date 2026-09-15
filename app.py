@@ -1,3 +1,136 @@
+import streamlit as st
+from streamlit_js_eval import get_geolocation
+import math
+import pandas as pd
+import time
+import json
+import os
+
+# 1. App Styling and Titles
+st.set_page_config(page_title="GEN X GOLF", page_icon="⛳", layout="centered")
+
+# --- CENTERED TWO-LINE HIGH-CONTRAST TITLE ---
+st.markdown("""
+    <h1 style='text-align: center; font-size: 2.8rem; font-weight: 900; color: #000000; line-height: 1.2; margin-bottom: 25px;'>
+        GEN X GOLF<br>
+        <span style='font-size: 2.2rem; font-weight: 800; color: #2E7D32;'>DISTANCE TRACKER</span>
+    </h1>
+""", unsafe_allow_html=True)
+
+# --- SETUP PERSISTENT DISK STORAGE ---
+DATA_FILE = "golf_shot_history.json"
+
+def load_persistent_history():
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, "r") as f:
+                return json.load(f)
+        except:
+            return []
+    return []
+
+def save_persistent_history(history_list):
+    with open(DATA_FILE, "w") as f:
+        json.dump(history_list, f)
+
+# Create a master trigger key to force browser hardware updates
+if 'gps_trigger' not in st.session_state:
+    st.session_state.gps_trigger = 0
+
+# Sync permanent data with active app memory
+if 'shot_history' not in st.session_state:
+    st.session_state.shot_history = load_persistent_history()
+if 'tee_lat' not in st.session_state:
+    st.session_state.tee_lat = None
+    st.session_state.tee_lon = None
+if 'waiting_for_end_gps' not in st.session_state:
+    st.session_state.waiting_for_end_gps = False
+if 'saved_club' not in st.session_state:
+    st.session_state.saved_club = "Driver"
+if 'last_calculated_distance' not in st.session_state:
+    st.session_state.last_calculated_distance = None
+
+# --- SUNLIGHT HIGH-CONTRAST UI & DISTANCE DISPLAY CONFIGURATION ---
+st.markdown("""
+    <style>
+        /* Global Canvas Overrides for Direct Sunlight Viewability */
+        html, body, [data-testid="stAppViewContainer"] {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }
+
+        /* Club Selector Box Sunlight Enhancements */
+        div[data-testid="stSelectbox"] label p {
+            font-size: 22px !important;
+            font-weight: 800 !important;
+            color: #111111 !important;
+        }
+        div[data-testid="stSelectbox"] div[data-baseweb="select"] {
+            border: 3px solid #000000 !important;
+            border-radius: 8px !important;
+            background-color: #FFFFFF !important;
+        }
+        div[data-testid="stSelectbox"] span {
+            font-size: 22px !important;
+            font-weight: 700 !important;
+            color: #000000 !important;
+        }
+
+        /* NUKES ALL STREAMLIT DEFAULTS: Forces every single button to be green with black text */
+        button {
+            background-color: #2E7D32 !important; /* Premium Medium Golf Course Green */
+            color: #000000 !important;            /* Solid crisp black font */
+            font-size: 22px !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.5px !important;
+            text-transform: uppercase !important;
+            padding: 18px 10px !important;
+            border-radius: 12px !important;
+            border: 3px solid #000000 !important;
+            box-shadow: 6px 6px 0px 0px #000000 !important;
+            transition: transform 0.05s ease !important;
+        }
+
+        /* Ensure disabled buttons keep their structure but soften contrast */
+        button:disabled {
+            background-color: #A5D6A7 !important; /* Lighter muted green when locked */
+            color: #555555 !important;
+            opacity: 0.8 !important;
+            cursor: not-allowed !important;
+        }
+        
+        /* Interactive iOS Safari Tap Action Feedback */
+        button:active {
+            transform: translate(3px, 3px) !important;
+            box-shadow: 3px 3px 0px 0px #000000 !important;
+        }
+
+        /* Centered Performance Panel Display */
+        .distance-display-box {
+            background-color: #FFFFFF;
+            border: 4px solid #000000;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 6px 6px 0px 0px #2E7D32;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .distance-label {
+            font-size: 1.2rem;
+            color: #111111;
+            text-transform: uppercase;
+            font-weight: 900;
+            margin-bottom: 4px;
+        }
+        .distance-number {
+            font-size: 3.5rem;
+            color: #2E7D32;
+            font-weight: 900;
+            line-height: 1.0;
+        }
+    </style>
+""", unsafe_allow_html=True)
 # 2. Wake up the phone's live GPS coordinates using the correct component parameter
 location = get_geolocation(component_key=f"gps_tracker_{st.session_state.gps_trigger}")
 
@@ -8,56 +141,54 @@ elif 'coords' not in location:
 else:
     current_lat = location['coords']['latitude']
     current_lon = location['coords']['longitude']
-    # Pull accuracy radius (in meters) directly from iPhone GPS hardware
-    gps_accuracy = location['coords'].get('accuracy', 999)
 
     # --- MID-RUN CALCULATION INTERCEPTOR ---
     if st.session_state.waiting_for_end_gps:
-        # HIGH-ACCURACY GATEKEEPER: If the phone is returning a cached or weak signal (> 25 meters), 
-        # force the app to cycle the hardware again until a tight satellite lock is achieved.
-        if gps_accuracy > 25:
-            st.toast("🛰️ Signal weak or cached. Polling satellites for precise location...", icon="⏳")
+        # INTERCEPT OLD DATA: If the browser feeds us the EXACT same coordinates as the tee box, 
+        # it is serving a cached position. We reject it and cycle the hardware.
+        if current_lat == st.session_state.tee_lat and current_lon == st.session_state.tee_lon:
+            st.toast("🛰️ Waiting for GPS chip to update your moving position...", icon="⏳")
             time.sleep(0.5)
             st.session_state.gps_trigger += 1
             st.rerun()
 
-        if current_lat != st.session_state.tee_lat or current_lon != st.session_state.tee_lon:
-            lat1, lon1 = math.radians(st.session_state.tee_lat), math.radians(st.session_state.tee_lon)
-            lat2, lon2 = math.radians(current_lat), math.radians(current_lon)
+        # Calculate standard Haversine distance using global metrics
+        lat1, lon1 = math.radians(st.session_state.tee_lat), math.radians(st.session_state.tee_lon)
+        lat2, lon2 = math.radians(current_lat), math.radians(current_lon)
+        
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        
+        a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+        
+        # STANDARD MATHEMATICAL CONSTANT: Converted directly to accurate Yards
+        distance_in_yards = round(6967410 * c)
+        
+        # Prevent tracking microscopic coordinate jitter if standing in one spot
+        if distance_in_yards > 3:
+            st.session_state.last_calculated_distance = distance_in_yards
             
-            dlat = lat2 - lat1
-            dlon = lon2 - lon1
+            # Save the shot data to your history memory list
+            shot_number = len(st.session_state.shot_history) + 1
+            new_shot = {
+                "Shot #": shot_number,
+                "Club Used": st.session_state.saved_club,
+                "Distance": f"{distance_in_yards} Yards"
+            }
+            st.session_state.shot_history.append(new_shot)
             
-            a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
-            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-            
-            # FIXED MATHEMATICAL CONSTANT: Standard global Earth radius converted strictly to Yards
-            distance_in_yards = round(6967410 * c)
-            
-            # Prevent microscopic GPS drift from logging accidental 0-2 yard phantom shots
-            if distance_in_yards > 3:
-                st.session_state.last_calculated_distance = distance_in_yards
-                
-                # Save the shot data to your history memory list
-                shot_number = len(st.session_state.shot_history) + 1
-                new_shot = {
-                    "Shot #": shot_number,
-                    "Club Used": st.session_state.saved_club,
-                    "Distance": f"{distance_in_yards} Yards"
-                }
-                st.session_state.shot_history.append(new_shot)
-                
-                # Lock the new shot into permanent disk memory
-                save_persistent_history(st.session_state.shot_history)
-            else:
-                st.toast("⚠️ Distance too short. Measurement ignored to prevent tracking drift.", icon="🛑")
-            
-            # Clear targeting state so you can hit your next shot smoothly
-            st.session_state.tee_lat = None
-            st.session_state.tee_lon = None
-            st.session_state.waiting_for_end_gps = False
-            st.toast(f"🚀 Shot tracked: {distance_in_yards} Yards!", icon="🏌️‍♂️")
-            st.rerun()
+            # Lock the new shot into permanent disk memory
+            save_persistent_history(st.session_state.shot_history)
+        else:
+            st.toast("⚠️ Distance too short. Measurement ignored to prevent phantom tracking.", icon="🛑")
+        
+        # Clear targeting state so you can hit your next shot smoothly
+        st.session_state.tee_lat = None
+        st.session_state.tee_lon = None
+        st.session_state.waiting_for_end_gps = False
+        st.toast(f"🚀 Shot tracked: {distance_in_yards} Yards!", icon="🏌️‍♂️")
+        st.rerun()
 
     # 3. Setup Your Shot Layout
     st.subheader("1. Setup Your Shot")
@@ -82,18 +213,12 @@ else:
     with col1:
         st.markdown('<div class="green-action-btn">', unsafe_allow_html=True)
         if st.button("🔴 Click 1: Just Teed Off", use_container_width=True, disabled=st.session_state.waiting_for_end_gps):
-            # Only save tee location if the GPS signal is fresh and reasonably accurate
-            if gps_accuracy <= 25:
-                st.session_state.tee_lat = current_lat
-                st.session_state.tee_lon = current_lon
-                st.session_state.gps_trigger += 1  
-                st.session_state.last_calculated_distance = None
-                st.toast(f"🎯 Tee location saved for your {selected_club}!", icon="📍")
-                st.rerun()
-            else:
-                st.toast("🛰️ Waiting for crisp satellite alignment... Try tapping again in a second.", icon="⏳")
-                st.session_state.gps_trigger += 1
-                st.rerun()
+            st.session_state.tee_lat = current_lat
+            st.session_state.tee_lon = current_lon
+            st.session_state.gps_trigger += 1  
+            st.session_state.last_calculated_distance = None
+            st.toast(f"🎯 Tee location saved for your {selected_club}!", icon="📍")
+            st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
@@ -116,14 +241,13 @@ else:
             </div>
         """, unsafe_allow_html=True)
 
-    # Helper dynamic info status banners with real-time GPS accuracy display
+    # Helper dynamic info status banners
     if st.session_state.waiting_for_end_gps:
         st.info("🛰️ Processing live satellite coordinates... calculating distance.")
     elif st.session_state.tee_lat:
         st.info(f"🔄 Ball is live. Walk to your shot, stand still for a brief second, then tap **Click 2: At My Ball**.")
     else:
-        accuracy_text = f" (Signal Accuracy: +/- {round(gps_accuracy)}m)" if gps_accuracy != 999 else ""
-        st.success(f"✅ Ready for next shot. Tap **Click 1: Just Teed Off** at your current location.{accuracy_text}")
+        st.success("✅ Ready for next shot. Tap **Click 1: Just Teed Off** at your current location.")
 
     st.divider()
 
@@ -190,6 +314,7 @@ else:
             save_persistent_history([])
             st.session_state.gps_trigger += 1
             st.rerun()
+
 
 
 
