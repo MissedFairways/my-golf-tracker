@@ -3,6 +3,8 @@ from streamlit_js_eval import get_geolocation
 import math
 import pandas as pd
 import time
+import json
+import os
 
 # 1. App Styling and Titles
 st.set_page_config(page_title="GEN X GOLF", page_icon="⛳", layout="centered")
@@ -15,16 +17,32 @@ st.markdown("""
     </h1>
 """, unsafe_allow_html=True)
 
+# --- SETUP PERSISTENT DISK STORAGE ---
+DATA_FILE = "golf_shot_history.json"
+
+def load_persistent_history():
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, "r") as f:
+                return json.load(f)
+        except:
+            return []
+    return []
+
+def save_persistent_history(history_list):
+    with open(DATA_FILE, "w") as f:
+        json.dump(history_list, f)
+
 # Create a master trigger key to force browser hardware updates
 if 'gps_trigger' not in st.session_state:
     st.session_state.gps_trigger = 0
 
-# --- SETUP PERSISTENT MEMORY ---
+# Sync permanent data with active app memory
+if 'shot_history' not in st.session_state:
+    st.session_state.shot_history = load_persistent_history()
 if 'tee_lat' not in st.session_state:
     st.session_state.tee_lat = None
     st.session_state.tee_lon = None
-if 'shot_history' not in st.session_state:
-    st.session_state.shot_history = []
 if 'waiting_for_end_gps' not in st.session_state:
     st.session_state.waiting_for_end_gps = False
 if 'saved_club' not in st.session_state:
@@ -32,7 +50,6 @@ if 'saved_club' not in st.session_state:
 if 'last_calculated_distance' not in st.session_state:
     st.session_state.last_calculated_distance = None
 
-# --- SUNLIGHT HIGH-CONTRAST UI & DISTANCE DISPLAY CONFIGURATION ---
 # --- SUNLIGHT HIGH-CONTRAST UI & DISTANCE DISPLAY CONFIGURATION ---
 st.markdown("""
     <style>
@@ -114,11 +131,9 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
-
 # 2. Wake up the phone's live GPS coordinates using the correct component parameter
-location = get_geolocation(
-    component_key=f"gps_tracker_{st.session_state.gps_trigger}")
-# Continues directly from the location check block
+location = get_geolocation(component_key=f"gps_tracker_{st.session_state.gps_trigger}")
+
 if location is None:
     st.info("🔄 Connecting to iPhone GPS satellites... Please allow location access if prompted.")
 elif 'coords' not in location:
@@ -154,6 +169,9 @@ else:
             }
             st.session_state.shot_history.append(new_shot)
             
+            # Lock the new shot into permanent disk memory
+            save_persistent_history(st.session_state.shot_history)
+            
             # Clear targeting state so you can hit your next shot smoothly
             st.session_state.tee_lat = None
             st.session_state.tee_lon = None
@@ -187,7 +205,6 @@ else:
             st.session_state.tee_lat = current_lat
             st.session_state.tee_lon = current_lon
             st.session_state.gps_trigger += 1  
-            # Clear out old display value once a fresh tracking run begins
             st.session_state.last_calculated_distance = None
             st.toast(f"🎯 Tee location saved for your {selected_club}!", icon="📍")
             st.rerun()
@@ -196,7 +213,6 @@ else:
     with col2:
         st.markdown('<div class="blue-action-btn">', unsafe_allow_html=True)
         if st.button("⚪ Click 2: At My Ball", use_container_width=True, disabled=(st.session_state.tee_lat is None or st.session_state.waiting_for_end_gps)):
-            # Force structural delay pass allowing PWA to cycle and secure accurate satellite lock
             with st.spinner("Locking Satellite Array..."):
                 time.sleep(2.0)
             st.session_state.waiting_for_end_gps = True
@@ -226,8 +242,6 @@ else:
 
     # Display the History Scorecard Table
     st.subheader("📋 Your Shot History Scorecard")
-    
-    # CORRECTED ASSIGNMENT: Assigning to a simple variable name first
     shot_history_list = st.session_state.shot_history
     
     if shot_history_list:
@@ -236,7 +250,7 @@ else:
     else:
         st.write("_No shots recorded yet for this round._")
 
-    # --- NEW FEATURE: CLUB AVERAGES TRACKER ---
+    # --- CLUB AVERAGES TRACKER ---
     st.divider()
     st.subheader("📊 Your Club Averages")
 
@@ -250,18 +264,14 @@ else:
         try:
             club_data = []
             for shot in shot_history_list:
-                # Safely pull numbers out of strings like "250 Yards"
                 raw_dist = str(shot["Distance"]).replace("Yards", "").strip()
                 dist_numeric = int(raw_dist)
                 club_data.append({"Club": shot["Club Used"], "Distance": dist_numeric})
             
-            # Group data by club name and get the rounded mathematical average
             math_df = pd.DataFrame(club_data)
             avg_df = math_df.groupby("Club")["Distance"].mean().round().astype(int).reset_index()
-            # Sort from longest hitting club down to shortest hitting club
             avg_df = avg_df.sort_values(by="Distance", ascending=False)
             
-            # Display stats in clean high-contrast blocks easy to read under direct sunlight
             for index, row in avg_df.iterrows():
                 st.markdown(f"""
                     <div style='background-color: #FFFFFF; border: 3px solid #000000; border-radius: 12px; padding: 12px 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 4px 4px 0px 0px #000000;'>
@@ -290,8 +300,13 @@ else:
             st.session_state.waiting_for_end_gps = False
             st.session_state.last_calculated_distance = None
             st.session_state.shot_history = []
+            
+            # Wipes the permanent file clean from the disk
+            save_persistent_history([])
+            
             st.session_state.gps_trigger += 1
             st.rerun()
+
 
 
 
