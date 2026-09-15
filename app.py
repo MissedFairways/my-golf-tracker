@@ -24,54 +24,56 @@ if 'saved_club' not in st.session_state:
 if 'last_calculated_distance' not in st.session_state:
     st.session_state.last_calculated_distance = None
 
-# --- ENHANCED MOBILE UI CUSTOM CSS ---
+# --- SUNLIGHT VISIBILITY MASSIVE CSS OVERRIDES ---
 st.markdown("""
     <style>
         /* 1. Large, Easy-to-Tap Dropdown Menu */
         div[data-baseweb="select"] {
-            font-size: 1.3rem !important;
+            font-size: 1.4rem !important;
             font-weight: bold !important;
         }
         div[data-testid="stSelectbox"] label p {
-            font-size: 1.1rem !important;
+            font-size: 1.2rem !important;
             font-weight: bold !important;
         }
 
-        /* 2. Global Button Sizing Overrides */
+        /* 2. Global Button Sizing & Massive Font Overrides */
         div[data-testid="stButton"] button {
             width: 100% !important;
-            padding: 18px 10px !important; /* Extra height padding for thumb taps */
-            font-size: 1.25rem !important; /* Significantly larger text */
-            font-weight: 800 !important;   /* Ultra-bold typography */
-            border-radius: 12px !important;
+            padding: 24px 10px !important;    /* Thick, tall profile for quick thumb target */
+            font-size: 2.8rem !important;    /* Matches the exact font scale of the distance box */
+            font-weight: 900 !important;      /* Ultra-bold text */
+            border-radius: 16px !important;
             border: none !important;
+            text-transform: uppercase !important;
+            letter-spacing: -1px !important;
             transition: all 0.1s ease-in-out !important;
         }
 
-        /* 3. Button Depth, Shadows, and Color Coding */
-        /* Click 1 Button (Green) */
+        /* 3. True Solid Color Blocks with Clear Button Depth Shadows */
+        /* Teed Off Button (Rich Forest Green) */
         div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button {
-            background-color: #1B5E20 !important; /* Forest Green */
-            color: white !important;
-            box-shadow: 0px 5px 0px #0D260D, 0px 8px 15px rgba(0, 0, 0, 0.2) !important;
+            background-color: #1B5E20 !important; 
+            color: #FFFFFF !important;
+            box-shadow: 0px 8px 0px #0D260D, 0px 10px 20px rgba(0, 0, 0, 0.3) !important;
         }
         div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button:active {
-            transform: translateY(3px) !important;
-            box-shadow: 0px 2px 0px #0D260D, 0px 4px 8px rgba(0, 0, 0, 0.2) !important;
+            transform: translateY(4px) !important;
+            box-shadow: 0px 4px 0px #0D260D, 0px 6px 10px rgba(0, 0, 0, 0.3) !important;
         }
 
-        /* Click 2 Button (Blue) */
+        /* At My Ball Button (Deep Golf Blue) */
         div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button {
-            background-color: #0D47A1 !important; /* Rich Golf Blue */
-            color: white !important;
-            box-shadow: 0px 5px 0px #0A2244, 0px 8px 15px rgba(0, 0, 0, 0.2) !important;
+            background-color: #0D47A1 !important; 
+            color: #FFFFFF !important;
+            box-shadow: 0px 8px 0px #0A2244, 0px 10px 20px rgba(0, 0, 0, 0.3) !important;
         }
         div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button:active {
-            transform: translateY(3px) !important;
-            box-shadow: 0px 2px 0px #0A2244, 0px 4px 8px rgba(0, 0, 0, 0.2) !important;
+            transform: translateY(4px) !important;
+            box-shadow: 0px 4px 0px #0A2244, 0px 6px 10px rgba(0, 0, 0, 0.3) !important;
         }
         
-        /* Safe styling for disabled states when calculations are processing */
+        /* Processing / Disabled Button States */
         div[data-testid="stButton"] button:disabled {
             background-color: #E0E0E0 !important;
             color: #9E9E9E !important;
@@ -79,19 +81,19 @@ st.markdown("""
             transform: none !important;
         }
 
-        /* 4. Large Green Distance Display Panel */
+        /* 4. Large Distance Display Panel Box */
         .distance-display-box {
             background-color: #FFFFFF;
-            border: 3px solid #1B5E20;
-            border-radius: 14px;
+            border: 4px solid #1B5E20;
+            border-radius: 16px;
             padding: 20px;
             text-align: center;
-            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.08);
+            box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.1);
             margin-top: 25px;
             margin-bottom: 25px;
         }
         .distance-label {
-            font-size: 1.0rem;
+            font-size: 1.1rem;
             color: #555555;
             text-transform: uppercase;
             font-weight: 800;
@@ -99,7 +101,7 @@ st.markdown("""
             margin-bottom: 4px;
         }
         .distance-number {
-            font-size: 2.8rem; /* Expanded for quick glance scanning */
+            font-size: 2.8rem; 
             color: #1B5E20; 
             font-weight: 900;
             line-height: 1.0;
@@ -135,10 +137,8 @@ else:
             # Calibrated Earth radius multiplier for Yards
             distance_in_yards = round(6975175 * c)
             
-            # Track it in persistent state so the main interface can render it safely
             st.session_state.last_calculated_distance = distance_in_yards
             
-            # Save the shot data to your history memory list
             shot_number = len(st.session_state.shot_history) + 1
             new_shot = {
                 "Shot #": shot_number,
@@ -147,7 +147,6 @@ else:
             }
             st.session_state.shot_history.append(new_shot)
             
-            # Clear targeting state so you can hit your next shot smoothly
             st.session_state.tee_lat = None
             st.session_state.tee_lon = None
             st.session_state.waiting_for_end_gps = False
@@ -173,9 +172,10 @@ else:
     # 4. Action Buttons
     st.subheader("2. Track Your Distance")
     
-    col1, col2 = st.columns(2)
+    # We use two independent rows for mobile layout scaling so the 2.8rem fonts don't squash side-by-side
+    col1, col2 = st.columns(1)
     with col1:
-        if st.button("🟢 Teed Off", use_container_width=True, disabled=st.session_state.waiting_for_end_gps):
+        if st.button("TEE OFF", use_container_width=True, disabled=st.session_state.waiting_for_end_gps):
             st.session_state.tee_lat = current_lat
             st.session_state.tee_lon = current_lon
             st.session_state.gps_trigger += 1  
@@ -183,8 +183,11 @@ else:
             st.toast(f"🎯 Tee location saved for your {selected_club}!", icon="📍")
             st.rerun()
 
-    with col2:
-        if st.button("🔵 At My Ball", use_container_width=True, disabled=(st.session_state.tee_lat is None or st.session_state.waiting_for_end_gps)):
+    st.write("") # Symmetrical spacing spacer
+
+    col2_row, _ = st.columns(1)
+    with col2_row:
+        if st.button("AT BALL", use_container_width=True, disabled=(st.session_state.tee_lat is None or st.session_state.waiting_for_end_gps)):
             st.session_state.waiting_for_end_gps = True
             st.session_state.gps_trigger += 1  
             st.toast("🛰️ Fetching new location...", icon="🔄")
@@ -203,9 +206,9 @@ else:
     if st.session_state.waiting_for_end_gps:
         st.info("🛰️ Processing live satellite coordinates... calculating distance.")
     elif st.session_state.tee_lat:
-        st.info(f"🔄 Ball is live. Walk to your shot, stand still for a brief second, then tap **🔵 At My Ball**.")
+        st.info("🔄 Ball is live. Walk to your shot, stand still for a brief second, then tap **AT BALL**.")
     else:
-        st.success("✅ Ready for next shot. Tap **🟢 Teed Off** at your current location.")
+        st.success("✅ Ready for next shot. Tap **TEE OFF** at your current location.")
 
     st.divider()
 
@@ -237,6 +240,7 @@ else:
             st.session_state.shot_history = []
             st.session_state.gps_trigger += 1
             st.rerun()
+
 
 
 
