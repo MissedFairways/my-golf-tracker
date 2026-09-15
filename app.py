@@ -33,6 +33,7 @@ if 'last_calculated_distance' not in st.session_state:
     st.session_state.last_calculated_distance = None
 
 # --- SUNLIGHT HIGH-CONTRAST UI & DISTANCE DISPLAY CONFIGURATION ---
+# --- SUNLIGHT HIGH-CONTRAST UI & DISTANCE DISPLAY CONFIGURATION ---
 st.markdown("""
     <style>
         /* Global Canvas Overrides for Direct Sunlight Viewability */
@@ -58,8 +59,10 @@ st.markdown("""
             color: #000000 !important;
         }
 
-        /* Base Heavy-Duty Action Button Configuration */
-        div.stButton > button {
+        /* NUKES ALL STREAMLIT DEFAULTS: Forces every single button to be green with black text */
+        button {
+            background-color: #2E7D32 !important; /* Premium Medium Golf Course Green */
+            color: #000000 !important;            /* Solid crisp black font */
             font-size: 22px !important;
             font-weight: 900 !important;
             letter-spacing: 0.5px !important;
@@ -67,39 +70,20 @@ st.markdown("""
             padding: 18px 10px !important;
             border-radius: 12px !important;
             border: 3px solid #000000 !important;
+            box-shadow: 6px 6px 0px 0px #000000 !important;
             transition: transform 0.05s ease !important;
         }
 
-        /* BOTH Action Buttons: High-Vis Course Green with Dark Black Font */
-        div.green-action-btn > div.stButton > button,
-        div.blue-action-btn > div.stButton > button {
-            background-color: #39FF14 !important; /* Ultra high-visibility safety/golf green */
-            color: #000000 !important;            /* Solid black text for extreme contrast */
-            box-shadow: 6px 6px 0px 0px #000000 !important; /* Flat stark drop shadow */
+        /* Ensure disabled buttons keep their structure but soften contrast */
+        button:disabled {
+            background-color: #A5D6A7 !important; /* Lighter muted green when locked */
+            color: #555555 !important;
+            opacity: 0.8 !important;
+            cursor: not-allowed !important;
         }
         
         /* Interactive iOS Safari Tap Action Feedback */
-        div.stButton > button:active {
-            transform: translate(3px, 3px) !important;
-            box-shadow: 3px 3px 0px 0px #000000 !important;
-        }
-
-        /* Forest Green Action Button (Click 1) */
-        div.green-action-btn > div.stButton > button {
-            background-color: #006633 !important;
-            color: #FFFFFF !important;
-            box-shadow: 6px 6px 0px 0px #000000 !important;
-        }
-
-        /* Golf Blue Action Button (Click 2) */
-        div.blue-action-btn > div.stButton > button {
-            background-color: #0044AA !important;
-            color: #FFFFFF !important;
-            box-shadow: 6px 6px 0px 0px #000000 !important;
-        }
-        
-        /* Interactive iOS Safari Tap Action Feedback */
-        div.stButton > button:active {
+        button:active {
             transform: translate(3px, 3px) !important;
             box-shadow: 3px 3px 0px 0px #000000 !important;
         }
