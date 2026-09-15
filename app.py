@@ -51,24 +51,24 @@ st.markdown("""
         }
 
         /* 3. True Solid Color Blocks with Clear Button Depth Shadows */
-        /* Teed Off Button (Rich Forest Green) */
-        div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button {
+        /* TEE OFF Button (Rich Forest Green) */
+        div.tee-off-btn-container div[data-testid="stButton"] button {
             background-color: #1B5E20 !important; 
             color: #FFFFFF !important;
             box-shadow: 0px 8px 0px #0D260D, 0px 10px 20px rgba(0, 0, 0, 0.3) !important;
         }
-        div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button:active {
+        div.tee-off-btn-container div[data-testid="stButton"] button:active {
             transform: translateY(4px) !important;
             box-shadow: 0px 4px 0px #0D260D, 0px 6px 10px rgba(0, 0, 0, 0.3) !important;
         }
 
-        /* At My Ball Button (Deep Golf Blue) */
-        div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button {
+        /* AT BALL Button (Deep Golf Blue) */
+        div.at-ball-btn-container div[data-testid="stButton"] button {
             background-color: #0D47A1 !important; 
             color: #FFFFFF !important;
             box-shadow: 0px 8px 0px #0A2244, 0px 10px 20px rgba(0, 0, 0, 0.3) !important;
         }
-        div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button:active {
+        div.at-ball-btn-container div[data-testid="stButton"] button:active {
             transform: translateY(4px) !important;
             box-shadow: 0px 4px 0px #0A2244, 0px 6px 10px rgba(0, 0, 0, 0.3) !important;
         }
@@ -172,26 +172,26 @@ else:
     # 4. Action Buttons
     st.subheader("2. Track Your Distance")
     
-    # We use two independent rows for mobile layout scaling so the 2.8rem fonts don't squash side-by-side
-    col1, col2 = st.columns(1)
-    with col1:
-        if st.button("TEE OFF", use_container_width=True, disabled=st.session_state.waiting_for_end_gps):
-            st.session_state.tee_lat = current_lat
-            st.session_state.tee_lon = current_lon
-            st.session_state.gps_trigger += 1  
-            st.session_state.last_calculated_distance = None
-            st.toast(f"🎯 Tee location saved for your {selected_club}!", icon="📍")
-            st.rerun()
+    # Render stacked rows natively with wrapper div tags to capture green/blue CSS profiles
+    st.markdown('<div class="tee-off-btn-container">', unsafe_allow_html=True)
+    if st.button("TEE OFF", use_container_width=True, disabled=st.session_state.waiting_for_end_gps):
+        st.session_state.tee_lat = current_lat
+        st.session_state.tee_lon = current_lon
+        st.session_state.gps_trigger += 1  
+        st.session_state.last_calculated_distance = None
+        st.toast(f"🎯 Tee location saved for your {selected_club}!", icon="📍")
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    st.write("") # Symmetrical spacing spacer
+    st.write("") # Clear symmetrical vertical spacer
 
-    col2_row, _ = st.columns(1)
-    with col2_row:
-        if st.button("AT BALL", use_container_width=True, disabled=(st.session_state.tee_lat is None or st.session_state.waiting_for_end_gps)):
-            st.session_state.waiting_for_end_gps = True
-            st.session_state.gps_trigger += 1  
-            st.toast("🛰️ Fetching new location...", icon="🔄")
-            st.rerun()
+    st.markdown('<div class="at-ball-btn-container">', unsafe_allow_html=True)
+    if st.button("AT BALL", use_container_width=True, disabled=(st.session_state.tee_lat is None or st.session_state.waiting_for_end_gps)):
+        st.session_state.waiting_for_end_gps = True
+        st.session_state.gps_trigger += 1  
+        st.toast("🛰️ Fetching new location...", icon="🔄")
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # --- PERSISTENT MAIN-SCREEN DISTANCE PANEL ---
     if st.session_state.last_calculated_distance is not None:
@@ -240,6 +240,7 @@ else:
             st.session_state.shot_history = []
             st.session_state.gps_trigger += 1
             st.rerun()
+
 
 
 
