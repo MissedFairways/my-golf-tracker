@@ -70,6 +70,14 @@ st.markdown("""
             transition: transform 0.05s ease !important;
         }
 
+        /* BOTH Action Buttons: High-Vis Course Green with Dark Black Font */
+        div.green-action-btn > div.stButton > button,
+        div.blue-action-btn > div.stButton > button {
+            background-color: #39FF14 !important; /* Ultra high-visibility safety/golf green */
+            color: #000000 !important;            /* Solid black text for extreme contrast */
+            box-shadow: 6px 6px 0px 0px #000000 !important; /* Flat stark drop shadow */
+        }
+
         /* Forest Green Action Button (Click 1) */
         div.green-action-btn > div.stButton > button {
             background-color: #006633 !important;
