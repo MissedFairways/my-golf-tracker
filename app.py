@@ -5,8 +5,15 @@ import pandas as pd
 import time
 
 # 1. App Styling and Titles
-st.set_page_config(page_title="Golf Tracker", page_icon="⛳", layout="centered")
-st.title("⛳ My Advanced Golf Drive Tracker")
+st.set_page_config(page_title="GEN X GOLF", page_icon="⛳", layout="centered")
+
+# --- CENTERED TWO-LINE HIGH-CONTRAST TITLE ---
+st.markdown("""
+    <h1 style='text-align: center; font-size: 2.8rem; font-weight: 900; color: #000000; line-height: 1.2; margin-bottom: 25px;'>
+        GEN X GOLF<br>
+        <span style='font-size: 2.2rem; font-weight: 800; color: #2E7D32;'>DISTANCE TRACKER</span>
+    </h1>
+""", unsafe_allow_html=True)
 
 # Create a master trigger key to force browser hardware updates
 if 'gps_trigger' not in st.session_state:
