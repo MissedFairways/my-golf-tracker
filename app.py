@@ -115,6 +115,7 @@ location = get_geolocation(
     component_key=f"gps_tracker_{st.session_state.gps_trigger}"
 )
 
+# Continues directly from the location check block
 if location is None:
     st.info("🔄 Connecting to iPhone GPS satellites... Please allow location access if prompted.")
 elif 'coords' not in location:
@@ -243,8 +244,11 @@ else:
         if st.button("🗑️ Clear Entire Scorecard", use_container_width=True):
             st.session_state.tee_lat = None
             st.session_state.tee_lon = None
-
-st.session_state.waiting_for_end_gps = Falsest.session_state.last_calculated_distance = Nonest.session_state.shot_history = []st.session_state.gps_trigger += 1st.rerun()
+            st.session_state.waiting_for_end_gps = False
+            st.session_state.last_calculated_distance = None
+            st.session_state.shot_history = []
+            st.session_state.gps_trigger += 1
+            st.rerun()
 
 
 
