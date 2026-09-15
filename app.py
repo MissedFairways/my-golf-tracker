@@ -21,9 +21,39 @@ if 'waiting_for_end_gps' not in st.session_state:
     st.session_state.waiting_for_end_gps = False
 if 'saved_club' not in st.session_state:
     st.session_state.saved_club = "Driver"
+if 'last_calculated_distance' not in st.session_state:
+    st.session_state.last_calculated_distance = None
+
+# --- CUSTOM CSS FOR THE DISTANCE DISPLAY BOX ---
+st.markdown("""
+    <style>
+        .distance-display-box {
+            background-color: #FFFFFF;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.05);
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        .distance-label {
+            font-size: 0.9rem;
+            color: #666666;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        .distance-number {
+            font-size: 2.2rem;
+            color: #2E7D32; /* Large Green Numbers */
+            font-weight: 800;
+            line-height: 1.1;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # 2. Wake up the phone's live GPS coordinates using the correct component parameter
-# We pass options to maximize hardware accuracy and remove caching delays
 location = get_geolocation(
     component_key=f"gps_tracker_{st.session_state.gps_trigger}"
 )
@@ -38,7 +68,6 @@ else:
 
     # --- MID-RUN CALCULATION INTERCEPTOR ---
     if st.session_state.waiting_for_end_gps:
-        # Prevent math on identical coordinate caches
         if current_lat != st.session_state.tee_lat or current_lon != st.session_state.tee_lon:
             lat1, lon1 = math.radians(st.session_state.tee_lat), math.radians(st.session_state.tee_lon)
             lat2, lon2 = math.radians(current_lat), math.radians(current_lon)
@@ -49,8 +78,11 @@ else:
             a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
             c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
             
-            # --- CALIBRATED EARTH RADIUS MULTIPLIER FOR YARDS ---
+            # Calibrated Earth radius multiplier for Yards
             distance_in_yards = round(6975175 * c)
+            
+            # Track it in persistent state so the main interface can render it safely
+            st.session_state.last_calculated_distance = distance_in_yards
             
             # Save the shot data to your history memory list
             shot_number = len(st.session_state.shot_history) + 1
@@ -86,13 +118,15 @@ else:
 
     # 4. Action Buttons
     st.subheader("2. Track Your Distance")
+    
     col1, col2 = st.columns(2)
-
     with col1:
         if st.button("🔴 Click 1: Just Teed Off", use_container_width=True, disabled=st.session_state.waiting_for_end_gps):
             st.session_state.tee_lat = current_lat
             st.session_state.tee_lon = current_lon
             st.session_state.gps_trigger += 1  
+            # Clear out old display value once a fresh tracking run begins
+            st.session_state.last_calculated_distance = None
             st.toast(f"🎯 Tee location saved for your {selected_club}!", icon="📍")
             st.rerun()
 
@@ -102,6 +136,16 @@ else:
             st.session_state.gps_trigger += 1  
             st.toast("🛰️ Fetching new location...", icon="🔄")
             st.rerun()
+
+    # --- PERSISTENT MAIN-SCREEN DISTANCE PANEL ---
+    # Renders perfectly centered right below your tracking choices
+    if st.session_state.last_calculated_distance is not None:
+        st.markdown(f"""
+            <div class="distance-display-box">
+                <div class="distance-label">🏌️‍♂️ Last Shot Distance</div>
+                <div class="distance-number">{st.session_state.last_calculated_distance} YARDS</div>
+            </div>
+        """, unsafe_allow_html=True)
 
     # Helper dynamic info status banners
     if st.session_state.waiting_for_end_gps:
@@ -129,6 +173,7 @@ else:
             st.session_state.tee_lat = None
             st.session_state.tee_lon = None
             st.session_state.waiting_for_end_gps = False
+            st.session_state.last_calculated_distance = None
             st.session_state.gps_trigger += 1
             st.rerun()
     with col_clear2:
@@ -136,9 +181,11 @@ else:
             st.session_state.tee_lat = None
             st.session_state.tee_lon = None
             st.session_state.waiting_for_end_gps = False
+            st.session_state.last_calculated_distance = None
             st.session_state.shot_history = []
             st.session_state.gps_trigger += 1
             st.rerun()
+
 
 
 
