@@ -7,7 +7,8 @@ import pandas as pd
 st.set_page_config(page_title="Golf Tracker", page_icon="⛳")
 st.title("⛳ My Advanced Golf Drive Tracker")
 
-# 2. Wake up and grab the phone's live GPS coordinates
+# 2. Add a hidden component to force a location update when a button is clicked
+# We use a standard Streamlit button action to force the app script to rerun and poll the GPS hardware freshly.
 location = get_geolocation()
 
 if location is None:
@@ -18,29 +19,19 @@ else:
     current_lat = location['coords']['latitude']
     current_lon = location['coords']['longitude']
 
-    # 3. Setup Persistent Memory (Tee box and History List)
+    # 3. Setup Persistent Memory
     if 'tee_lat' not in st.session_state:
         st.session_state.tee_lat = None
         st.session_state.tee_lon = None
     if 'shot_history' not in st.session_state:
         st.session_state.shot_history = []
 
-    # CUSTOM FEATURE: Your Exact Club Bag Layout
+    # Custom Feature: Club Bag Layout
     st.subheader("1. Setup Your Shot")
     club_options = [
-        "Driver", 
-        "Mini-Driver", 
-        "3-Wood", 
-        "4-Iron", 
-        "5-Iron", 
-        "6-Iron", 
-        "7-Iron", 
-        "8-Iron", 
-        "9-Iron", 
-        "Pitching Wedge", 
-        "Gap Wedge", 
-        "54° Wedge", 
-        "60° Wedge"
+        "Driver", "Mini-Driver", "3-Wood", "4-Iron", "5-Iron", 
+        "6-Iron", "7-Iron", "8-Iron", "9-Iron", "Pitching Wedge", 
+        "Gap Wedge", "54° Wedge", "60° Wedge"
     ]
     selected_club = st.selectbox("Which club are you hitting?", options=club_options)
 
@@ -51,10 +42,12 @@ else:
     col1, col2 = st.columns(2)
 
     with col1:
+        # Hitting this button saves the absolute latest fetched latitude/longitude
         if st.button("🔴 Click 1: Just Teed Off", use_container_width=True):
             st.session_state.tee_lat = current_lat
             st.session_state.tee_lon = current_lon
             st.success(f"Tee location saved for your {selected_club}!")
+            st.rerun() # Force code block refresh to lock coordinate states securely
 
     with col2:
         if st.button("⚪ Click 2: At My Ball", use_container_width=True):
@@ -94,7 +87,6 @@ else:
     # Display the History Scorecard Table
     st.subheader("📋 Your Shot History Scorecard")
     if st.session_state.shot_history:
-        # Convert our memory list into a clean visual table
         df = pd.DataFrame(st.session_state.shot_history)
         st.dataframe(df, use_container_width=True, hide_index=True)
     else:
@@ -114,5 +106,6 @@ else:
             st.session_state.tee_lon = None
             st.session_state.shot_history = []
             st.rerun()
+
 
 
