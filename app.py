@@ -1,145 +1,191 @@
 import streamlit as st
-import math
 import pandas as pd
+import math
+import streamlit.components.v1 as components
 
-# 1. App Styling and Titles
-st.set_page_config(page_title="Golf Tracker", page_icon="⛳")
-st.title("⛳ My Advanced Golf Drive Tracker")
+# --- PAGE CONFIGURATION (Mobile Friendly) ---
+st.set_page_config(
+    page_title="Golf Drive Tracker",
+    page_icon="⛳",
+    layout="centered",
+    initial_sidebar_state="collapsed"
+)
 
-# 2. Setup Persistent Memory
-if 'tee_lat' not in st.session_state:
-    st.session_state.tee_lat = None
-    st.session_state.tee_lon = None
-if 'shot_history' not in st.session_state:
-    st.session_state.shot_history = []
+# --- CUSTOM CSS FOR IPHONE / SAFARI PWA ---
+st.markdown("""
+    <style>
+        /* Optimize button sizes for mobile thumbs */
+        .stButton button {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1.1rem !important;
+            border-radius: 10px;
+        }
+        /* Make select boxes larger and easier to tap */
+        .stSelectbox div[data-baseweb="select"] {
+            font-size: 1.1rem !important;
+        }
+        /* Lock down scaling behaviors */
+        html, body, [data-testid="stAppViewContainer"] {
+            overflow-x: hidden;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-# Custom Feature: Club Bag Layout
-st.subheader("1. Setup Your Shot")
-club_options = [
-    "Driver", "Mini-Driver", "3-Wood", "4-Iron", "5-Iron", 
-    "6-Iron", "7-Iron", "8-Iron", "9-Iron", "Pitching Wedge", 
-    "Gap Wedge", "54° Wedge", "60° Wedge"
-]
-selected_club = st.selectbox("Which club are you hitting?", options=club_options)
-
-st.divider()
-
-# 3. BULLETPROOF NATIVE GPS CAPTURE
-st.subheader("2. Track Your Distance")
-
-# We create two query parameters to pass information directly between the browser session and Python
-# This completely eliminates standard text boxes so the JavaScript won't overwrite your buttons!
-query_params = st.query_params
-
-current_lat_str = query_params.get("lat", "")
-current_lon_str = query_params.get("lon", "")
-
-# Native browser HTML5 snippet that securely fetches GPS and injects it back to Python via URL updates
-gps_js_code = """
-<script>
-function updateGPS() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            
-            // Get the current web address
-            const url = new URL(window.parent.location.href);
-            
-            // Check if coordinates have actually changed before refreshing
-            if (url.searchParams.get("lat") !== lat.toString() || url.searchParams.get("lon") !== lon.toString()) {
-                url.searchParams.set("lat", lat);
-                url.searchParams.set("lon", lon);
-                // Update the app URL invisibly to feed the coordinates back to Python
-                window.parent.history.replaceState({}, "", url.toString());
-                window.parent.location.reload();
-            }
-        }, function(error) {
-            console.log("GPS Error: " + error.message);
-        }, {enableHighAccuracy: true, timeout: 5000});
-    }
-}
-// Check for fresh coordinates every 4 seconds
-setInterval(updateGPS, 4000);
-updateGPS();
-</script>
-"""
-st.components.v1.html(gps_js_code, height=0)
-
-# Process tracking ONLY if Safari successfully outputs coordinates into our secure background parameters
-if current_lat_str and current_lon_str:
-    current_lat = float(current_lat_str)
-    current_lon = float(current_lon_str)
+# --- HAVERSINE DISTANCE FORMULA (Do Not Change) ---
+def calculate_haversine(lat1, lon1, lat2, lon2):
+    if None in (lat1, lon1, lat2, lon2):
+        return 0.0
+    R = 6371000 # Earth radius in meters
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
     
-    col1, col2 = st.columns(2)
+    a = math.sin(delta_phi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    meters = R * c
+    yards = meters * 1.09361
+    return round(yards, 1)
 
-    with col1:
-        if st.button("🔴 Click 1: Just Teed Off", use_container_width=True):
-            st.session_state.tee_lat = current_lat
-            st.session_state.tee_lon = current_lon
-            st.success(f"Tee location saved for your {selected_club}!")
-            st.rerun()
+# --- SESSION STATE INITIALIZATION ---
+if "scorecard" not in st.session_state:
+    st.session_state.scorecard = pd.DataFrame(columns=["Shot #", "Club Used", "Distance (Yds)"])
 
-    with col2:
-        if st.button("⚪ Click 2: At My Ball", use_container_width=True):
-            if st.session_state.tee_lat is None:
-                st.error("Please click 'Just Teed Off' first!")
-            else:
-                # Math formula to calculate distance on Earth
-                lat1, lon1 = math.radians(st.session_state.tee_lat), math.radians(st.session_state.tee_lon)
-                lat2, lon2 = math.radians(current_lat), math.radians(current_lon)
-                
-                dlat = lat2 - lat1
-                dlon = lon2 - lon1
-                
-                a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
-                c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-                distance_in_yards = round(6967410 * c)
-                
-                # Show the result on screen
-                st.metric(label="🏌️‍♂️ Driving Distance", value=f"{distance_in_yards} Yards")
-                
-                # Save the shot data to our history scorecard memory list
-                shot_number = len(st.session_state.shot_history) + 1
-                new_shot = {
-                    "Shot #": shot_number,
-                    "Club Used": selected_club,
-                    "Distance": f"{distance_in_yards} Yards"
-                }
-                st.session_state.shot_history.append(new_shot)
-                st.success("Shot saved to history scorecard below!")
-                st.rerun()
+if "start_coords" not in st.session_state:
+    st.session_state.start_coords = None
 
-    # Helper info status tracker
-    if st.session_state.tee_lat and not st.session_state.shot_history:
-        st.info(f"📍 {selected_club} position locked in. Walk to your ball and hit Click 2!")
+# --- CLUB BAG SELECTION (Do Not Change) ---
+CLUB_BAG = [
+    "Driver", "Mini-Driver", "3-Wood", 
+    "4-Iron", "5-Iron", "6-Iron", "7-Iron", "8-Iron", "9-Iron", 
+    "Pitching Wedge", "Gap Wedge", "54° Wedge", "60° Wedge"
+]
+
+st.title("⛳ Golf Drive Tracker")
+
+# --- LOW-OVERHEAD MOBILE GEOLOCATION BRIDGE ---
+# This component acts purely as a click listener. It passes data upstream without triggering 
+# window.parent reloads, bypassing Safari's aggressive caching/flashing loop entirely.
+def geolocation_button(label, key):
+    html_code = f"""
+    <button id="geo-btn" style="
+        width: 100%; 
+        padding: 12px; 
+        background-color: #FF4B4B; 
+        color: white; 
+        border: none; 
+        border-radius: 10px; 
+        font-size: 16px; 
+        font-weight: bold;
+        cursor: pointer;">
+        {label}
+    </button>
+
+    <script>
+        const btn = document.getElementById('geo-btn');
+        btn.addEventListener('click', () => {{
+            if (!navigator.geolocation) {{
+                alert('Geolocation is not supported by your browser.');
+                return;
+            }}
+            
+            btn.innerText = "Locating...";
+            btn.style.backgroundColor = "#FFA0A0";
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {{
+                    // Send coordinates securely back to Streamlit app window without reloads
+                    window.parent.postMessage({{
+                        type: 'streamlit:setComponentValue',
+                        value: {{
+                            lat: position.coords.latitude,
+                            lon: position.coords.longitude,
+                            timestamp: position.timestamp
+                        }}
+                    }}, '*');
+                    btn.innerText = "{label}";
+                    btn.style.backgroundColor = "#FF4B4B";
+                }},
+                (error) => {{
+                    alert('Error getting location: ' + error.message);
+                    btn.innerText = "{label}";
+                    btn.style.backgroundColor = "#FF4B4B";
+                }},
+                {{
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }}
+            );
+        }});
+    </script>
+    """
+    # Render component inline with a short height to mimic a native button layout
+    return components.html(html_code, height=50)
+
+# --- USER INTERFACE ---
+
+selected_club = st.selectbox("Select Club Used:", CLUB_BAG)
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("Step 1")
+    start_click = geolocation_button("📍 Mark Start Ball", key="start_btn")
+    # Capture data passed back from the specific iframe component instance
+    if start_click:
+        st.session_state.start_coords = (start_click['lat'], start_click['lon'])
+        st.toast(f"Start location locked!", icon="🎯")
+
+with col2:
+    st.subheader("Step 2")
+    end_click = geolocation_button("⛳ Mark End Ball", key="end_btn")
+    if end_click:
+        if st.session_state.start_coords is None:
+            st.error("Please mark a Start position first!")
+        else:
+            lat2, lon2 = end_click['lat'], end_click['lon']
+            lat1, lon1 = st.session_state.start_coords
+            
+            # Calculate final distance
+            distance = calculate_haversine(lat1, lon1, lat2, lon2)
+            
+            # Append shot to rolling history DataFrame
+            shot_num = len(st.session_state.scorecard) + 1
+            new_shot = pd.DataFrame([{
+                "Shot #": int(shot_num), 
+                "Club Used": selected_club, 
+                "Distance (Yds)": distance
+            }])
+            st.session_state.scorecard = pd.concat([st.session_state.scorecard, new_shot], ignore_index=True)
+            
+            # Reset start state for next shot
+            st.session_state.start_coords = None
+            st.toast(f"Shot tracked: {distance} Yds!", icon="🚀")
+
+# --- DISPLAY CURRENT TARGETING STATE ---
+if st.session_state.start_coords:
+    st.info("🔄 Ball is live. Walk to your ball and tap **Mark End Ball** to calculate distance.")
 else:
-    st.info("🔄 Connecting to iPhone GPS satellites... Please tap 'Allow Location' if Safari asks.")
+    st.success("✅ Ready for next shot. Tap **Mark Start Ball** at your current location.")
 
-st.divider()
-
-# Display the History Scorecard Table
-st.subheader("📋 Your Shot History Scorecard")
-if st.session_state.shot_history:
-    df = pd.DataFrame(st.session_state.shot_history)
-    st.dataframe(df, use_container_width=True, hide_index=True)
+# --- PERSISTENT SCORECARD TABLE (Do Not Change) ---
+st.subheader("📋 Round History")
+if not st.session_state.scorecard.empty:
+    # Render table nicely across phone dimensions
+    st.dataframe(
+        st.session_state.scorecard.set_index("Shot #"), 
+        use_container_width=True
+    )
+    
+    if st.button("🗑️ Reset Round"):
+        st.session_state.scorecard = pd.DataFrame(columns=["Shot #", "Club Used", "Distance (Yds)"])
+        st.session_state.start_coords = None
+        st.rerun()
 else:
-    st.write("No shots recorded yet for this round.")
+    st.write("_No shots tracked yet for this round._")
 
-# 4. Reset Options
-st.divider()
-col_clear1, col_clear2 = st.columns(2)
-with col_clear1:
-    if st.button("Reset Current Shot", use_container_width=True):
-        st.session_state.tee_lat = None
-        st.session_state.tee_lon = None
-        st.rerun()
-with col_clear2:
-    if st.button("🗑️ Clear Entire Scorecard", use_container_width=True):
-        st.session_state.tee_lat = None
-        st.session_state.tee_lon = None
-        st.session_state.shot_history = []
-        st.rerun()
 
 
 
