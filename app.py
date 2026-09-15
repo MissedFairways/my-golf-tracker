@@ -27,37 +27,41 @@ st.divider()
 # 3. BULLETPROOF NATIVE GPS CAPTURE
 st.subheader("2. Track Your Distance")
 
-# We create two hidden text inputs that JavaScript will force-fill with your phone's real live coordinates
-gps_lat = st.text_input("lat_holder", value="", key="lat_holder", label_visibility="collapsed")
-gps_lon = st.text_input("lon_holder", value="", key="lon_holder", label_visibility="collapsed")
+# Hidden HTML text inputs using standard markdown container targeting
+# We use standard HTML input elements inside a clean container to bypass input index conflicts completely.
+gps_lat = st.text_input("Latitude", value="", key="lat_holder", label_visibility="collapsed")
+gps_lon = st.text_input("Longitude", value="", key="lon_holder", label_visibility="collapsed")
 
-# Native browser HTML5 snippet that commands iOS location services to scan coordinates
+# Native browser HTML5 snippet that securely fetches GPS and injects it into Python via the matching Aria-labels
 gps_js_code = """
 <script>
 function updateGPS() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
-            // Find the hidden text boxes and inject the fresh live coordinates
-            const inputs = window.parent.document.querySelectorAll('input[type="text"]');
-            if(inputs.length >= 2) {
-                inputs[0].value = position.coords.latitude;
-                inputs[0].dispatchEvent(new Event('input', { bubbles: true }));
-                inputs[1].value = position.coords.longitude;
-                inputs[1].dispatchEvent(new Event('input', { bubbles: true }));
+            // Securely find our targeted input fields inside the webpage frame
+            const latInput = window.parent.document.querySelector('input[aria-label="Latitude"]');
+            const lonInput = window.parent.document.querySelector('input[aria-label="Longitude"]');
+            
+            if (latInput && lonInput) {
+                latInput.value = position.coords.latitude;
+                latInput.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                lonInput.value = position.coords.longitude;
+                lonInput.dispatchEvent(new Event('input', { bubbles: true }));
             }
         }, function(error) {
             console.log("GPS Error: " + error.message);
         }, {enableHighAccuracy: true, timeout: 5000});
     }
 }
-// Force native update every 3 seconds while page is open
+// Keep location fresh every 3 seconds
 setInterval(updateGPS, 3000);
 updateGPS();
 </script>
 """
 st.components.v1.html(gps_js_code, height=0)
 
-# Process tracking ONLY if Safari successfully outputs coordinates into our fields
+# Process tracking ONLY if Safari successfully outputs coordinates into our secure fields
 if gps_lat and gps_lon:
     current_lat = float(gps_lat)
     current_lon = float(gps_lon)
@@ -129,8 +133,9 @@ with col_clear2:
     if st.button("🗑️ Clear Entire Scorecard", use_container_width=True):
         st.session_state.tee_lat = None
         st.session_state.tee_lon = None
-        st.session_state.shot_history = []
+        st.shot_history = []
         st.rerun()
+
 
 
 
