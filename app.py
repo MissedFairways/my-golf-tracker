@@ -221,8 +221,12 @@ else:
 
     # Display the History Scorecard Table
     st.subheader("📋 Your Shot History Scorecard")
-    if st.session_history := st.session_state.shot_history:
-        df = pd.DataFrame(st.session_history)
+    
+    # CORRECTED ASSIGNMENT: Assigning to a simple variable name first
+    shot_history_list = st.session_state.shot_history
+    
+    if shot_history_list:
+        df = pd.DataFrame(shot_history_list)
         st.dataframe(df, use_container_width=True, hide_index=True)
     else:
         st.write("_No shots recorded yet for this round._")
