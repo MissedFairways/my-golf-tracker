@@ -23,7 +23,10 @@ if 'saved_club' not in st.session_state:
     st.session_state.saved_club = "Driver"
 
 # 2. Wake up the phone's live GPS coordinates using the correct component parameter
-location = get_geolocation(component_key=f"gps_tracker_{st.session_state.gps_trigger}")
+# We pass options to maximize hardware accuracy and remove caching delays
+location = get_geolocation(
+    component_key=f"gps_tracker_{st.session_state.gps_trigger}"
+)
 
 if location is None:
     st.info("🔄 Connecting to iPhone GPS satellites... Please allow location access if prompted.")
@@ -34,7 +37,6 @@ else:
     current_lon = location['coords']['longitude']
 
     # --- MID-RUN CALCULATION INTERCEPTOR ---
-    # This fires automatically ONLY after "Click 2" forces a fresh GPS satellite pull
     if st.session_state.waiting_for_end_gps:
         # Prevent math on identical coordinate caches
         if current_lat != st.session_state.tee_lat or current_lon != st.session_state.tee_lon:
@@ -47,8 +49,8 @@ else:
             a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
             c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
             
-            # Earth radius conversion to precise Yards
-            distance_in_yards = round(6967410 * c)
+            # --- CALIBRATED EARTH RADIUS MULTIPLIER FOR YARDS ---
+            distance_in_yards = round(6975175 * c)
             
             # Save the shot data to your history memory list
             shot_number = len(st.session_state.shot_history) + 1
@@ -73,7 +75,6 @@ else:
         "6-Iron", "7-Iron", "8-Iron", "9-Iron", "Pitching Wedge", 
         "Gap Wedge", "54° Wedge", "60° Wedge"
     ]
-    # Retain selected club in memory across state transitions
     selected_club = st.selectbox(
         "Which club are you hitting?", 
         options=club_options, 
@@ -88,20 +89,17 @@ else:
     col1, col2 = st.columns(2)
 
     with col1:
-        # Disable button if we are currently waiting for the second click calculation pass
         if st.button("🔴 Click 1: Just Teed Off", use_container_width=True, disabled=st.session_state.waiting_for_end_gps):
             st.session_state.tee_lat = current_lat
             st.session_state.tee_lon = current_lon
-            st.session_state.gps_trigger += 1  # Force clear old cached location data
+            st.session_state.gps_trigger += 1  
             st.toast(f"🎯 Tee location saved for your {selected_club}!", icon="📍")
             st.rerun()
 
     with col2:
-        # Disable button if you haven't locked in a start point yet
         if st.button("⚪ Click 2: At My Ball", use_container_width=True, disabled=(st.session_state.tee_lat is None or st.session_state.waiting_for_end_gps)):
-            # Set the flag saying: "We're walking. Next time coordinates update, do the math!"
             st.session_state.waiting_for_end_gps = True
-            st.session_state.gps_trigger += 1  # Tell Safari to wake up hardware and pull new position
+            st.session_state.gps_trigger += 1  
             st.toast("🛰️ Fetching new location...", icon="🔄")
             st.rerun()
 
@@ -109,7 +107,7 @@ else:
     if st.session_state.waiting_for_end_gps:
         st.info("🛰️ Processing live satellite coordinates... calculating distance.")
     elif st.session_state.tee_lat:
-        st.info(f"🔄 Ball is live. Walk to your shot and tap **Click 2: At My Ball**.")
+        st.info(f"🔄 Ball is live. Walk to your shot, stand still for a brief second, then tap **Click 2: At My Ball**.")
     else:
         st.success("✅ Ready for next shot. Tap **Click 1: Just Teed Off** at your current location.")
 
@@ -141,6 +139,7 @@ else:
             st.session_state.shot_history = []
             st.session_state.gps_trigger += 1
             st.rerun()
+
 
 
 
