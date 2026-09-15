@@ -112,9 +112,7 @@ st.markdown("""
 
 # 2. Wake up the phone's live GPS coordinates using the correct component parameter
 location = get_geolocation(
-    component_key=f"gps_tracker_{st.session_state.gps_trigger}"
-)
-
+    component_key=f"gps_tracker_{st.session_state.gps_trigger}")
 # Continues directly from the location check block
 if location is None:
     st.info("🔄 Connecting to iPhone GPS satellites... Please allow location access if prompted.")
@@ -249,6 +247,8 @@ else:
             st.session_state.shot_history = []
             st.session_state.gps_trigger += 1
             st.rerun()
+
+
 
 
 
