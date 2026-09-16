@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEN X GOLF - PURE GPS</title>
+    <style>
+        body {
+            background-color: #FFFFFF;
+            color: #000000;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #2E7D32;
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+        .btn-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        button {
+            flex: 1;
+            background-color: #2E7D32;
+            color: #000000;
+            font-size: 20px;
+            font-weight: 900;
+            text-transform: uppercase;
+            padding: 20px 10px;
+            border-radius: 12px;
+            border: 3px solid #000000;
+            box-shadow: 6px 6px 0px 0px #000000;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #A5D6A7;
+            color: #555555;
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+        #status {
+            background-color: #E8F5E9;
+            color: #2E7D32;
+            border: 3px solid #000000;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 800;
+            text-align: center;
+            font-size: 18px;
+            box-shadow: 4px 4px 0px 0px #000000;
+        }
+        .distance-box {
+            background-color: #FFFFFF;
+            border: 4px solid #000000;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 6px 6px 0px 0px #2E7D32;
+            margin-top: 30px;
+            display: none;
+        }
+        .distance-label {
+            font-size: 1.2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: #111111;
+        }
+        .distance-number {
+            font-size: 3.5rem;
+            color: #2E7D32;
+            font-weight: 900;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>GEN X GOLF</h1>
+    <div class="subtitle">DISTANCE TRACKER</div>
+
+    <div class="btn-container">
+        <button id="click1" onclick="captureTee()">🔴 Click 1: Tee Off</button>
+        <button id="click2" onclick="captureBall()" disabled>⚪ Click 2: At Ball</button>
+    </div>
+
+    <div id="status">⛳ Stand on the tee box and tap Click 1.</div>
+
+    <div id="distanceDisplay" class="distance-box">
+        <div class="distance-label">🏌️‍♂️ Shot Distance</div>
+        <div id="yardsNumber" class="distance-number">0 YARDS</div>
+    </div>
+
+<script>
+    let teeLat = null;
+    let teeLon = null;
+
+    // Direct math calculated right on your iPhone hardware
+    function calculateHaversine(lat1, lon1, lat2, lon2) {
+        const p = Math.PI / 180;
+        const a = 0.5 - Math.cos((lat2 - lat1) * p)/2 + 
+                Math.cos(lat1 * p) * Math.cos(lat2 * p) * 
+                (1 - Math.cos((lon2 - lon1) * p))/2;
+        return Math.round(2 * 6371000 * Math.asin(Math.sqrt(a)) * 1.09361);
+    }
+
+    function captureTee() {
+        document.getElementById("status").innerHTML = "🛰️ Pulling satellite array...";
+        
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                teeLat = position.coords.latitude;
+                teeLon = position.coords.longitude;
+                
+                document.getElementById("click2").disabled = false;
+                document.getElementById("status").style.backgroundColor = "#FFF3E0";
+                document.getElementById("status").style.color = "#E65100";
+                document.getElementById("status").innerHTML = "🔄 Tee locked! Walk to your ball and tap Click 2.";
+            },
+            function(error) {
+                document.getElementById("status").innerHTML = "❌ GPS Access Denied. Check Safari Settings.";
+            },
+            { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+        );
+    }
+
+    function captureBall() {
+        document.getElementById("status").innerHTML = "🛰️ Pulling ball satellite data...";
+        
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const ballLat = position.coords.latitude;
+                const ballLon = position.coords.longitude;
+                
+                const yards = calculateHaversine(teeLat, teeLon, ballLat, ballLon);
+                
+                document.getElementById("yardsNumber").innerHTML = yards + " YARDS";
+                document.getElementById("distanceDisplay").style.display = "block";
+                
+                // Reset tracking for the next shot
+                teeLat = null;
+                teeLon = null;
+                document.getElementById("click2").disabled = true;
+                document.getElementById("status").style.backgroundColor = "#E8F5E9";
+                document.getElementById("status").style.color = "#2E7D32";
+                document.getElementById("status").innerHTML = "✅ Shot tracked! Ready for the next tee box.";
+            },
+            function(error) {
+                document.getElementById("status").innerHTML = "❌ GPS Pull Failed. Try again.";
+            },
+            { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+        );
+    }
+</script>
+</body>
+</html>
