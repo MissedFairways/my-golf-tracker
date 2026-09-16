@@ -1,4 +1,6 @@
 import streamlit as st
+import streamlit.components.v1 as components
+import json
 import math
 import pandas as pd
 
@@ -18,95 +20,12 @@ inject_sunlight_styles()
 # 2. Session Memory Synchronization
 if 'shot_history' not in st.session_state:
     st.session_state.shot_history = load_persistent_history()
-if 'tee_lat' not in st.session_state:
-    st.session_state.tee_lat = None
-    st.session_state.tee_lon = None
-if 'saved_club' not in st.session_state:
-    st.session_state.saved_club = "Driver"
 if 'last_calculated_distance' not in st.session_state:
     st.session_state.last_calculated_distance = None
+if 'saved_club' not in st.session_state:
+    st.session_state.saved_club = "Driver"
 
-# 3. UNBLOCKED DIRECT HARDWARE BRIDGE
-# This invisible script runs locally on your iPhone 15 Pro, forcing Safari to pull fresh satellite data.
-st.markdown("""
-<script>
-    function triggerHardwareGPS(actionType) {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    
-                    // Locate the native Streamlit text field input boxes safely
-                    const inputs = window.parent.document.querySelectorAll('input[type="text"]');
-                    if (inputs.length > 0) {
-                        // Inject the raw telemetry string directly into the text field element
-                        inputs[0].value = actionType + ":" + lat + "," + lon;
-                        inputs[0].dispatchEvent(new Event('input', { bubbles: true }));
-                        inputs[0].dispatchEvent(new Event('change', { bubbles: true }));
-                    }
-                },
-                function(error) {
-                    console.log("GPS Error: " + error.code);
-                },
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
-            );
-        }
-    }
-</script>
-""", unsafe_allow_html=True)
-
-# This standard text box is hidden from the UI but acts as our unblocked security bridge
-gps_mailbox = st.text_input("GPS Secure Bridge Data Link", key="gps_mailbox_bridge", label_visibility="collapsed")
-
-# Process incoming data instantly when the mailbox receives an injection
-if gps_mailbox and (":" in str(gps_mailbox)):
-    payload = str(gps_mailbox)
-    
-    if payload.startswith("TEE:"):
-        try:
-            coords = payload.replace("TEE:", "").split(",")
-            st.session_state.tee_lat = float(coords[0])
-            st.session_state.tee_lon = float(coords[1])
-            st.session_state.last_calculated_distance = None
-            st.toast("🎯 Tee box coordinates locked into memory!", icon="📍")
-        except:
-            pass
-            
-    elif payload.startswith("BALL:"):
-        try:
-            coords = payload.replace("BALL:", "").split(",")
-            ball_lat = float(coords[0])
-            ball_lon = float(coords[1])
-            
-            if st.session_state.tee_lat is not None:
-                lat1, lon1 = math.radians(st.session_state.tee_lat), math.radians(st.session_state.tee_lon)
-                lat2, lon2 = math.radians(ball_lat), math.radians(ball_lon)
-                dlat, dlon = lat2 - lat1, lon2 - lon1
-                
-                a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
-                c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-                distance_in_yards = round(6967410 * c)
-                
-                st.session_state.last_calculated_distance = distance_in_yards
-                shot_number = len(st.session_state.shot_history) + 1
-                
-                new_shot = {
-                    "Shot #": shot_number, 
-                    "Club Used": st.session_state.saved_club, 
-                    "Distance": f"{distance_in_yards} Yards"
-                }
-                st.session_state.shot_history.append(new_shot)
-                save_persistent_history(st.session_state.shot_history)
-                
-                st.session_state.tee_lat = None
-                st.session_state.tee_lon = None
-                st.toast(f"🚀 Shot logged: {distance_in_yards} Yards!", icon="🏌️‍♂️")
-                st.rerun()
-        except:
-            pass
-
-# 4. Main User Interface Layout
+# 3. Main User Interface Layout
 st.subheader("1. Setup Your Shot")
 club_options = ["Driver", "Mini-Driver", "3-Wood", "4-Iron", "5-Iron", "6-Iron", "7-Iron", "8-Iron", "9-Iron", "Pitching Wedge", "Gap Wedge", "54° Wedge", "60° Wedge"]
 selected_club = st.selectbox("Which club are you hitting?", options=club_options, index=club_options.index(st.session_state.saved_club) if st.session_state.saved_club in club_options else 0)
@@ -114,17 +33,111 @@ st.session_state.saved_club = selected_club
 
 st.divider()
 st.subheader("2. Track Your Distance")
-col1, col2 = st.columns(2)
 
-with col1:
-    # Native button that executes local iPhone browser code instantly, avoiding the sandbox block
-    if st.button("🔴 Click 1: Just Teed Off", use_container_width=True):
-        st.components.v1.html("<script>window.parent.triggerHardwareGPS('TEE');</script>", height=0, width=0)
+# 4. UNBLOCKED SECURE HARDWARE MODULE
+# This single module combines the buttons and the location tracking inside one unblocked sandboxed space.
+# It completely cuts out the server delays and calculates distance instantly on your device.
+html_interface_bridge = f"""
+<div style="font-family: sans-serif; display: flex; flex-direction: column; gap: 15px; width: 100%;">
+    <div style="display: flex; gap: 15px; width: 100%;">
+        <button id="btn1" onclick="handleTeeBox()" style="flex: 1; background-color: #2E7D32; color: #000000; font-size: 20px; font-weight: 900; text-transform: uppercase; padding: 18px 10px; border-radius: 12px; border: 3px solid #000000; box-shadow: 4px 4px 0px 0px #000000; cursor: pointer;">
+            🔴 Click 1: Just Teed Off
+        </button>
+        <button id="btn2" onclick="handleLandingBall()" disabled style="flex: 1; background-color: #A5D6A7; color: #555555; font-size: 20px; font-weight: 900; text-transform: uppercase; padding: 18px 10px; border-radius: 12px; border: 3px solid #000000; box-shadow: 4px 4px 0px 0px #000000; cursor: not-allowed; opacity: 0.7;">
+            ⚪ Click 2: At My Ball
+        </button>
+    </div>
+    <div id="status_message" style="background-color: #E8F5E9; color: #2E7D32; border: 2px solid #2E7D32; padding: 12px; border-radius: 8px; font-weight: bold; text-align: center; font-size: 16px; margin-top: 5px;">
+        ✅ System Armed. Stand on the tee box and tap Click 1.
+    </div>
+</div>
 
-with col2:
-    is_click2_disabled = (st.session_state.tee_lat is None)
-    if st.button("⚪ Click 2: At My Ball", use_container_width=True, disabled=is_click2_disabled):
-        st.components.v1.html("<script>window.parent.triggerHardwareGPS('BALL');</script>", height=0, width=0)
+<script>
+    let teeLat = null;
+    let teeLon = null;
+
+    function calculateYards(lat1, lon1, lat2, lon2) {
+        const p = Math.PI / 180;
+        const a = 0.5 - Math.cos((lat2 - lat1) * p)/2 + 
+                Math.cos(lat1 * p) * Math.cos(lat2 * p) * 
+                (1 - Math.cos((lon2 - lon1) * p))/2;
+        // Exact Earth radius mapped directly to yards
+        return Math.round(2 * 6371000 * Math.asin(Math.sqrt(a)) * 1.09361);
+    }
+
+    function handleTeeBox() {
+        document.getElementById("status_message").innerHTML = "🛰️ Locking Tee Satellites...";
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    teeLat = position.coords.latitude;
+                    teeLon = position.coords.longitude;
+                    
+                    // Enable Ball tracking button immediately
+                    const b2 = document.getElementById("btn2");
+                    b2.disabled = false;
+                    b2.style.backgroundColor = "#2E7D32";
+                    b2.style.color = "#000000";
+                    b2.style.cursor = "pointer";
+                    b2.style.opacity = "1";
+                    
+                    document.getElementById("status_message").style.backgroundColor = "#FFF3E0";
+                    document.getElementById("status_message").style.color = "#E65100";
+                    document.getElementById("status_message").style.borderColor = "#E65100";
+                    document.getElementById("status_message").innerHTML = "🔄 Ball tracking active. Walk to your landing spot, stand still for a second, then hit Click 2.";
+                },
+                function(error) {
+                    document.getElementById("status_message").innerHTML = "❌ GPS Lock Failed. Check Safari location settings.";
+                },
+                {{ enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }}
+            );
+        }
+    }
+
+    function handleLandingBall() {
+        document.getElementById("status_message").innerHTML = "🛰️ Locking Landing Satellites...";
+        if (navigator.geolocation && teeLat !== null) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const ballLat = position.coords.latitude;
+                    const ballLon = position.coords.longitude;
+                    
+                    // Run the calculation completely locally on your iPhone 15 Pro hardware
+                    const yards = calculateYards(teeLat, teeLon, ballLat, ballLon);
+                    
+                    // Dispatch the final verified yardage number cleanly back to Streamlit
+                    window.parent.postMessage({
+                        type: 'streamlit:setComponentValue',
+                        value: yards
+                    }, '*');
+                },
+                function(error) {
+                    document.getElementById("status_message").innerHTML = "❌ GPS Lock Failed. Try clicking again.";
+                },
+                {{ enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }}
+            );
+        }
+    }
+</script>
+"""
+
+# Render the button cluster and listen for the final numerical response
+returned_yards = components.html(html_interface_bridge, height=130)
+
+# Process verified tracking data inside Streamlit when the phone delivers a value
+if returned_yards is not None and str(returned_yards).isdigit():
+    final_yards = int(returned_yards)
+    st.session_state.last_calculated_distance = final_yards
+    
+    shot_number = len(st.session_state.shot_history) + 1
+    new_shot = {
+        "Shot #": shot_number, 
+        "Club Used": st.session_state.saved_club, 
+        "Distance": f"{final_yards} Yards"
+    }
+    st.session_state.shot_history.append(new_shot)
+    save_persistent_history(st.session_state.shot_history)
+    st.rerun()
 
 # Scorecard Results Visualization Dashboard
 if st.session_state.last_calculated_distance is not None:
@@ -134,12 +147,6 @@ if st.session_state.last_calculated_distance is not None:
             <div class="distance-number">{st.session_state.last_calculated_distance} YARDS</div>
         </div>
     """, unsafe_allow_html=True)
-
-# Dynamic status helper banner
-if st.session_state.tee_lat:
-    st.info("🔄 Ball tracking active. Walk out to your landing spot, stand still for a second, then hit Click 2.")
-else:
-    st.success("✅ System Armored. Stand on the tee box and tap Click 1 to begin.")
 
 st.divider()
 st.subheader("📋 Your Shot History Scorecard")
@@ -158,17 +165,15 @@ st.divider()
 col_clear1, col_clear2 = st.columns(2)
 with col_clear1:
     if st.button("Reset Current Shot", use_container_width=True):
-        st.session_state.tee_lat = None
-        st.session_state.tee_lon = None
         st.session_state.last_calculated_distance = None
         st.rerun()
 with col_clear2:
     if st.button("🗑️ Clear Entire Scorecard", use_container_width=True):
-        st.session_state.tee_lat, st.session_state.tee_lon = None, None
         st.session_state.last_calculated_distance = None
         st.session_state.shot_history = []
         save_persistent_history([])
         st.rerun()
+
 
 
 
