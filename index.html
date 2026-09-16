@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="apple-touch-icon" href="https://flaticon.com">
+    <!-- Inline Apple Touch Icon using a clean SVG golf graphic that iOS Safari won't block -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://w3.org' viewBox='0 0 100 100' width='180' height='180'><rect width='100' height='100' fill='%23FFFFFF'/><circle cx='50' cy='50' r='42' fill='none' stroke='%23000000' stroke-width='6'/><circle cx='50' cy='50' r='30' fill='none' stroke='%232E7D32' stroke-width='4'/><path d='M48 25 L48 70 M48 28 L68 38 L48 48 Z' fill='%232E7D32' stroke='%23000000' stroke-width='3' stroke-linejoin='round'/><circle cx='50' cy='70' r='4' fill='%23000000'/></svg>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GEN X GOLF - ADVANCED GPS</title>
     <style>
@@ -14,13 +15,27 @@
             max-width: 500px;
             margin: 0 auto;
         }
-        h1 {
-            text-align: center;
+        /* Logo Header Layout */
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 15px;
+            margin-bottom: 25px;
+        }
+        .logo-graphic {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 8px;
+        }
+        .logo-title {
             font-size: 2.6rem;
             font-weight: 900;
-            line-height: 1.2;
-            margin-bottom: 5px;
-            margin-top: 10px;
+            line-height: 1.1;
+            text-align: center;
+            letter-spacing: -1px;
+            margin: 0;
         }
         .subtitle {
             text-align: center;
@@ -28,7 +43,7 @@
             font-size: 2rem;
             font-weight: 800;
             margin-top: 0;
-            margin-bottom: 25px;
+            margin-bottom: 0;
         }
         h3 {
             font-size: 1.4rem;
@@ -126,6 +141,19 @@
         th {
             background-color: #E8F5E9;
         }
+        /* Delete Button styling inside the scorecard table */
+        .delete-shot-btn {
+            background-color: #FFCDD2;
+            color: #B71C1C;
+            border: 2px solid #000000;
+            padding: 5px 8px;
+            font-size: 13px;
+            font-weight: 800;
+            border-radius: 6px;
+            box-shadow: 2px 2px 0px 0px #000000;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
         .avg-card {
             background-color: #FFFFFF;
             border: 3px solid #000000;
@@ -159,8 +187,17 @@
 </head>
 <body>
 
-    <h1>GEN X GOLF</h1>
-    <div class="subtitle">DISTANCE TRACKER</div>
+    <!-- Embedded high-visibility app header logo layout -->
+    <div class="logo-container">
+        <svg class="logo-graphic" viewBox="0 0 100 100" xmlns="http://w3.org">
+            <circle cx="50" cy="50" r="45" fill="#FFFFFF" stroke="#000000" stroke-width="6"/>
+            <circle cx="50" cy="50" r="32" fill="none" stroke="#2E7D32" stroke-width="4"/>
+            <path d="M47 20 L47 75 M47 25 L72 37 L47 49 Z" fill="#2E7D32" stroke="#000000" stroke-width="4" stroke-linejoin="round"/>
+            <circle cx="50" cy="75" r="5" fill="#000000"/>
+        </svg>
+        <h1 class="logo-title">GEN X GOLF</h1>
+        <div class="subtitle">DISTANCE TRACKER</div>
+    </div>
 
     <h3>1. Setup Your Shot</h3>
     <select id="clubSelect">
@@ -253,40 +290,56 @@
     }
 
     function handleTeeClick() {
-        if (liveLat !== null) {
-            teeLat = liveLat;
-            teeLon = liveLon;
-            document.getElementById("click2").disabled = false;
-            document.getElementById("status").innerHTML = "🎯 Tee locked! Walk to your ball and tap Click 2.";
-        } else {
-            document.getElementById("status").innerHTML = "🛰️ Searching for satellite lock... Try clicking in 3 seconds.";
+        if (liveLat === null || liveLon === null) {
+            alert("Waiting for GPS lock. Give it just a brief moment!");
+            return;
         }
+        teeLat = liveLat;
+        teeLon = liveLon;
+        
+        document.getElementById("click1").disabled = true;
+        document.getElementById("click2").disabled = false;
+        
+        let accYards = Math.round(liveAccuracy * 1.09361);
+        document.getElementById("status").style.backgroundColor = "#FFF3E0";
+        document.getElementById("status").style.color = "#E65100";
+        document.getElementById("status").innerHTML = "🔄 Walking... Antenna Warm (Signal Margin: ±" + accYards + " yds). Tap Click 2 at ball.";
     }
 
     function handleBallClick() {
-        if (teeLat !== null && liveLat !== null) {
-            const yards = calculateHaversine(teeLat, teeLon, liveLat, liveLon);
-            const selectedClub = document.getElementById("clubSelect").value;
-            const shotNumber = shotHistory.length + 1;
-            
-            const newShot = {
-                shotNum: shotNumber,
-                club: selectedClub,
-                distance: yards
-            };
-            
-            shotHistory.push(newShot);
-            localStorage.setItem('golf_shot_history', JSON.stringify(shotHistory));
-            
-            document.getElementById("yardsNumber").innerHTML = yards + " YARDS";
-            document.getElementById("distanceDisplay").style.display = "block";
-            
-            teeLat = null;
-            teeLon = null;
-            document.getElementById("click2").disabled = true;
-            
-            renderTables();
-        }
+        if (teeLat === null || teeLon === null) return;
+        
+        let calculatedYards = calculateHaversine(teeLat, teeLon, liveLat, liveLon);
+        let selectedClub = document.getElementById("clubSelect").value;
+        
+        shotHistory.push({
+            club: selectedClub,
+            distance: calculatedYards,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        
+        localStorage.setItem('golf_shot_history', JSON.stringify(shotHistory));
+        
+        document.getElementById("yardsNumber").innerHTML = calculatedYards + " YARDS";
+        document.getElementById("distanceDisplay").style.display = "block";
+        
+        teeLat = null;
+        teeLon = null;
+        document.getElementById("click1").disabled = false;
+        document.getElementById("click2").disabled = true;
+        
+        let accYards = Math.round(liveAccuracy * 1.09361);
+        document.getElementById("status").style.backgroundColor = "#E8F5E9";
+        document.getElementById("status").style.color = "#2E7D32";
+        document.getElementById("status").innerHTML = "✅ Satellites locked (GPS Signal Margin: ±" + accYards + " yds). Tap Click 1.";
+        
+        renderTables();
+    }
+
+    function deleteShot(index) {
+        shotHistory.splice(index, 1);
+        localStorage.setItem('golf_shot_history', JSON.stringify(shotHistory));
+        renderTables();
     }
 
     function renderTables() {
@@ -294,9 +347,14 @@
         if (shotHistory.length === 0) {
             tableContainer.innerHTML = '<p style="font-style: italic; color: #555555;">No shots recorded yet for this round.</p>';
         } else {
-            let html = '<table><tr><th>Shot #</th><th>Club Used</th><th>Distance</th></tr>';
-            for (let i = 0; i < shotHistory.length; i++) {
-                html += '<tr><td>' + shotHistory[i].shotNum + '</td><td>' + shotHistory[i].club + '</td><td>' + shotHistory[i].distance + ' Yards</td></tr>';
+            let html = '<table><tr><th>Time</th><th>Club</th><th>Yards</th><th>Action</th></tr>';
+            for (let i = shotHistory.length - 1; i >= 0; i--) {
+                html += '<tr>';
+                html += '<td>' + shotHistory[i].timestamp + '</td>';
+                html += '<td>' + shotHistory[i].club + '</td>';
+                html += '<td>' + shotHistory[i].distance + ' yds</td>';
+                html += '<td><button class="delete-shot-btn" onclick="deleteShot(' + i + ')">🗑️ Delete</button></td>';
+                html += '</tr>';
             }
             html += '</table>';
             tableContainer.innerHTML = html;
@@ -333,7 +391,7 @@
             let avgHtml = '';
             for (let i = 0; i < averagesList.length; i++) {
                 avgHtml += '<div class="avg-card">' +
-                           '<span class="avg-club">' + averagesList[i].club + '</span>' +
+                           '<span class="avg-club">🏌️‍♂️ ' + averagesList[i].club + '</span>' +
                            '<span class="avg-dist">' + averagesList[i].avg + ' YARDS</span>' +
                            '</div>';
             }
@@ -342,17 +400,21 @@
     }
 
     function clearScorecard() {
-        shotHistory = [];
-        localStorage.removeItem('golf_shot_history');
-        document.getElementById("distanceDisplay").style.display = "none";
-        teeLat = null;
-        teeLon = null;
-        document.getElementById("click2").disabled = true;
-        renderTables();
+        if (confirm("Are you sure you want to erase all shots for this round?")) {
+            shotHistory = [];
+            localStorage.removeItem('golf_shot_history');
+            document.getElementById("distanceDisplay").style.display = "none";
+            teeLat = null;
+            teeLon = null;
+            document.getElementById("click1").disabled = false;
+            document.getElementById("click2").disabled = true;
+            renderTables();
+        }
     }
 
     renderTables();
 </script>
 </body>
 </html>
+
 
