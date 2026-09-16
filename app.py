@@ -34,10 +34,9 @@ st.session_state.saved_club = selected_club
 st.divider()
 st.subheader("2. Track Your Distance")
 
-# 4. UNBLOCKED SECURE HARDWARE MODULE
-# This single module combines the buttons and the location tracking inside one unblocked sandboxed space.
-# It completely cuts out the server delays and calculates distance instantly on your device.
-html_interface_bridge = f"""
+# 4. UNBLOCKED SECURE NATIVE HARDWARE MODULE
+# Removed the problematic f-string layout to permanently fix the syntax execution error.
+html_interface_bridge = """
 <div style="font-family: sans-serif; display: flex; flex-direction: column; gap: 15px; width: 100%;">
     <div style="display: flex; gap: 15px; width: 100%;">
         <button id="btn1" onclick="handleTeeBox()" style="flex: 1; background-color: #2E7D32; color: #000000; font-size: 20px; font-weight: 900; text-transform: uppercase; padding: 18px 10px; border-radius: 12px; border: 3px solid #000000; box-shadow: 4px 4px 0px 0px #000000; cursor: pointer;">
@@ -61,7 +60,6 @@ html_interface_bridge = f"""
         const a = 0.5 - Math.cos((lat2 - lat1) * p)/2 + 
                 Math.cos(lat1 * p) * Math.cos(lat2 * p) * 
                 (1 - Math.cos((lon2 - lon1) * p))/2;
-        // Exact Earth radius mapped directly to yards
         return Math.round(2 * 6371000 * Math.asin(Math.sqrt(a)) * 1.09361);
     }
 
@@ -73,7 +71,6 @@ html_interface_bridge = f"""
                     teeLat = position.coords.latitude;
                     teeLon = position.coords.longitude;
                     
-                    // Enable Ball tracking button immediately
                     const b2 = document.getElementById("btn2");
                     b2.disabled = false;
                     b2.style.backgroundColor = "#2E7D32";
@@ -89,7 +86,7 @@ html_interface_bridge = f"""
                 function(error) {
                     document.getElementById("status_message").innerHTML = "❌ GPS Lock Failed. Check Safari location settings.";
                 },
-                {{ enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }}
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
             );
         }
     }
@@ -102,10 +99,8 @@ html_interface_bridge = f"""
                     const ballLat = position.coords.latitude;
                     const ballLon = position.coords.longitude;
                     
-                    // Run the calculation completely locally on your iPhone 15 Pro hardware
                     const yards = calculateYards(teeLat, teeLon, ballLat, ballLon);
                     
-                    // Dispatch the final verified yardage number cleanly back to Streamlit
                     window.parent.postMessage({
                         type: 'streamlit:setComponentValue',
                         value: yards
@@ -114,17 +109,17 @@ html_interface_bridge = f"""
                 function(error) {
                     document.getElementById("status_message").innerHTML = "❌ GPS Lock Failed. Try clicking again.";
                 },
-                {{ enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }}
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
             );
         }
     }
 </script>
 """
 
-# Render the button cluster and listen for the final numerical response
+# Render the button array and capture the final calculated integer yardage
 returned_yards = components.html(html_interface_bridge, height=130)
 
-# Process verified tracking data inside Streamlit when the phone delivers a value
+# Process data immediately when your iPhone delivers a value
 if returned_yards is not None and str(returned_yards).isdigit():
     final_yards = int(returned_yards)
     st.session_state.last_calculated_distance = final_yards
@@ -173,6 +168,7 @@ with col_clear2:
         st.session_state.shot_history = []
         save_persistent_history([])
         st.rerun()
+
 
 
 
