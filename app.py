@@ -32,17 +32,16 @@ if 'saved_club' not in st.session_state:
 if 'last_calculated_distance' not in st.session_state:
     st.session_state.last_calculated_distance = None
 
-# 3. Continuous Live Streaming GPS Loop (Stream instead of Snapshot)
-js_live_stream_script = """
+# 3. PERMANENT PASSIVE STREAMING (Keeps iPhone GPS hot and awake continuously)
+js_permanent_stream = """
 new Promise((resolve) => {
     if (!navigator.geolocation) {
-        resolve({ error: "Geolocation not supported" });
+        resolve({ error: "Geolocation unsupported" });
         return;
     }
-    // watchPosition establishes a continuous stream to keep the GPS chip active and accurate
-    const watchId = navigator.geolocation.watchPosition(
+    // High accuracy is continuously requested to prevent the phone from dropping to cell towers
+    navigator.geolocation.getCurrentPosition(
         (pos) => {
-            navigator.geolocation.clearWatch(watchId);
             resolve({
                 coords: {
                     latitude: pos.coords.latitude,
@@ -51,51 +50,35 @@ new Promise((resolve) => {
                 }
             });
         },
-        (err) => { 
-            navigator.geolocation.clearWatch(watchId);
-            resolve({ error: err.message }); 
-        },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+        (err) => { resolve({ error: err.message }); },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
 });
 """
 
 location = streamlit_js_eval(
-    js_expressions=js_live_stream_script, 
-    key=f"gps_streamer_{st.session_state.gps_trigger}"
+    js_expressions=js_permanent_stream, 
+    key=f"permanent_stream_{st.session_state.gps_trigger}"
 )
 
 current_lat = None
 current_lon = None
 gps_accuracy_yards = None
 
-if location is None:
-    st.info("🔄 Streaming live satellite data... Please stand in an open area.")
-elif 'error' in location:
-    st.warning(f"⚠️ GPS Stream Error: {location['error']}. Check Safari location settings.")
-elif 'coords' in location:
+if location is not None and 'coords' in location:
     current_lat = location['coords']['latitude']
     current_lon = location['coords']['longitude']
-    # Convert accuracy from meters to yards (1 meter ≈ 1.09361 yards)
     gps_accuracy_yards = round(location['coords']['accuracy'] * 1.09361, 1)
 
-    # Process distance tracking logic if the user clicked "At My Ball"
+    # If we are actively tracking a shot, process calculation immediately using the live streamed data
     if st.session_state.waiting_for_end_gps:
-        # Step A: Filter out old cached values if the coordinate hasn't budget at all
-        if current_lat == st.session_state.tee_lat and current_lon == st.session_state.tee_lon:
-            st.toast("🛰️ iPhone returned cached position. Forcing fresh satellite recalculation...", icon="⏳")
-            time.sleep(0.5)
+        # If accuracy hasn't settled under 6 yards, skip calculation and pull a fresher stream update
+        if gps_accuracy_yards > 6.0:
+            time.sleep(0.4)
             st.session_state.gps_trigger += 1
             st.rerun()
 
-        # Step B: Only accept coordinates once the satellite precision settles under 12 yards
-        if gps_accuracy_yards > 12.0:
-            st.toast(f"⏳ Waiting for high accuracy... current error margin is {gps_accuracy_yards} yards.", icon="🛰️")
-            time.sleep(0.5)
-            st.session_state.gps_trigger += 1
-            st.rerun()
-
-        # Step C: Precision verification passed, run calculation
+        # Math Calculation block
         lat1, lon1 = math.radians(st.session_state.tee_lat), math.radians(st.session_state.tee_lon)
         lat2, lon2 = math.radians(current_lat), math.radians(current_lon)
         dlat, dlon = lat2 - lat1, lon2 - lon1
@@ -103,7 +86,7 @@ elif 'coords' in location:
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
         distance_in_yards = round(6967410 * c)
         
-        if distance_in_yards > 8:
+        if distance_in_yards > 5:
             st.session_state.last_calculated_distance = distance_in_yards
             shot_number = len(st.session_state.shot_history) + 1
             new_shot = {"Shot #": shot_number, "Club Used": st.session_state.saved_club, "Distance": f"{distance_in_yards} Yards"}
@@ -114,6 +97,7 @@ elif 'coords' in location:
             st.session_state.tee_lon = None
             st.session_state.waiting_for_end_gps = False
             st.toast(f"🚀 Shot logged: {distance_in_yards} Yards!", icon="🏌️‍♂️")
+            st.session_state.gps_trigger += 1
             st.rerun()
         else:
             st.session_state.gps_trigger += 1
@@ -132,40 +116,48 @@ with col1:
     if st.button("🔴 Click 1: Just Teed Off", use_container_width=True, disabled=st.session_state.waiting_for_end_gps or current_lat is None):
         st.session_state.tee_lat = current_lat
         st.session_state.tee_lon = current_lon
-        st.session_state.gps_trigger += 1  
         st.session_state.last_calculated_distance = None
         st.toast(f"🎯 Tee location saved for your {selected_club}!", icon="📍")
+        st.session_state.gps_trigger += 1
         st.rerun()
 
 with col2:
     if st.button("⚪ Click 2: At My Ball", use_container_width=True, disabled=(st.session_state.tee_lat is None or st.session_state.waiting_for_end_gps or current_lat is None)):
         st.session_state.waiting_for_end_gps = True
-        st.session_state.gps_trigger += 1  
-        st.toast("🛰️ Analyzing accuracy levels...", icon="🔄")
+        st.toast("🛰️ Finalizing satellite verification...", icon="🔄")
+        st.session_state.gps_trigger += 1
         st.rerun()
 
-# --- LIVE ACCURACY METER DISPLAY ---
+# --- LIVE PASSIVE ACCURACY METER ---
 if gps_accuracy_yards is not None:
-    if gps_accuracy_yards <= 5.0:
-        badge_color, text_color, status_text = "#E8F5E9", "#2E7D32", "🎯 EXCELLENT"
-    elif gps_accuracy_yards <= 12.0:
-        badge_color, text_color, status_text = "#FFF3E0", "#E65100", "✅ GOOD (Ready)"
+    if gps_accuracy_yards <= 4.0:
+        badge_color, text_color, status_text = "#E8F5E9", "#2E7D32", "🎯 LASER ACCURATE"
+    elif gps_accuracy_yards <= 7.0:
+        badge_color, text_color, status_text = "#E8F5E9", "#1B5E20", "✅ HIGH QUALITY"
+    elif gps_accuracy_yards <= 15.0:
+        badge_color, text_color, status_text = "#FFF3E0", "#E65100", "⚠️ MODERATE"
     else:
-        badge_color, text_color, status_text = "#FFEBEE", "#C62828", "⏳ STABILIZING (Wait)"
+        badge_color, text_color, status_text = "#FFEBEE", "#C62828", "❌ POOR CELL TOWER SIGNAL"
 
     st.markdown(f"""
         <div style="background-color: {badge_color}; border: 2px solid {text_color}; padding: 10px; border-radius: 8px; text-align: center; margin-top: 12px;">
             <span style="color: {text_color}; font-weight: 800; font-size: 16px;">
-                🛰️ GPS Signal Strength: {status_text} &nbsp;|&nbsp; Margin of Error: ±{gps_accuracy_yards} Yards
+                🛰️ Live GPS Status: {status_text} &nbsp;|&nbsp; Margin of Error: ±{gps_accuracy_yards} Yards
             </span>
         </div>
     """, unsafe_allow_html=True)
 else:
     st.markdown("""
         <div style="background-color: #F5F5F5; border: 2px dashed #9E9E9E; padding: 10px; border-radius: 8px; text-align: center; margin-top: 12px;">
-            <span style="color: #616161; font-weight: 800; font-size: 16px;">🛰️ Checking Signal Quality...</span>
+            <span style="color: #616161; font-weight: 800; font-size: 16px;">🛰️ Finding Satellite Lock...</span>
         </div>
     """, unsafe_allow_html=True)
+
+# Continuous heartbeat re-polling loop to force phone browser updates every second natively
+if not st.session_state.waiting_for_end_gps:
+    time.sleep(1.0)
+    st.session_state.gps_trigger += 1
+    st.rerun()
 
 if st.session_state.last_calculated_distance is not None:
     st.markdown(f"""
@@ -176,11 +168,11 @@ if st.session_state.last_calculated_distance is not None:
     """, unsafe_allow_html=True)
 
 if st.session_state.waiting_for_end_gps:
-    st.info("🛰️ Processing live satellite coordinates... calculating distance.")
+    st.info("🛰️ Perfecting coordinates... checking error bounds.")
 elif st.session_state.tee_lat:
-    st.info(f"🔄 Ball is live. Walk to your shot, stand still for a brief second, then tap **Click 2: At My Ball**.")
+    st.info(f"🔄 Ball is live. Walk to your shot. Notice how accuracy sharpens as you walk!")
 else:
-    st.success("✅ Ready for next shot. Tap **Click 1: Just Teed Off** at your current location.")
+    st.success("✅ Ready for next shot. Tap **Click 1: Just Teed Off**.")
 
 st.divider()
 st.subheader("📋 Your Shot History Scorecard")
@@ -214,6 +206,7 @@ with col_clear2:
         save_persistent_history([])
         st.session_state.gps_trigger += 1
         st.rerun()
+
 
 
 
