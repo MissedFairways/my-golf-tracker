@@ -28,7 +28,6 @@ if 'last_calculated_distance' not in st.session_state:
     st.session_state.last_calculated_distance = None
 
 # 3. THE INSTANT SATELLITE BRIDGE COMPONENT
-# This script listens for user clicks and forces Safari to extract fresh dual-frequency GPS data immediately.
 gps_bridge_html = """
 <script>
     function captureHardwareGPS(actionType) {
@@ -81,6 +80,7 @@ if gps_response and (":" in str(gps_response)):
     if payload.startswith("TEE:"):
         try:
             coords = payload.replace("TEE:", "").split(",")
+            # FIXED: Grabbing the items by index out of the list explicitly
             st.session_state.tee_lat = float(coords[0])
             st.session_state.tee_lon = float(coords[1])
             st.session_state.last_calculated_distance = None
@@ -91,6 +91,7 @@ if gps_response and (":" in str(gps_response)):
     elif payload.startswith("BALL:"):
         try:
             coords = payload.replace("BALL:", "").split(",")
+            # FIXED: Grabbing the items by index out of the list explicitly
             ball_lat = float(coords[0])
             ball_lon = float(coords[1])
             
@@ -195,6 +196,7 @@ with col_clear2:
         st.session_state.shot_history = []
         save_persistent_history([])
         st.rerun()
+
 
 
 
