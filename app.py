@@ -25,21 +25,18 @@ if 'last_calculated_distance' not in st.session_state:
     st.session_state.last_calculated_distance = None
 
 # 3. Process Inbound Local GPS Data
-# This captures the precise data passed directly from the browser component below
 query_params = st.query_params
 if "calculated_yards" in query_params and "club" in query_params:
     try:
         distance_in_yards = int(float(query_params["calculated_yards"]))
         club_used = query_params["club"]
         
-        # Prevent double logging of the exact same shot on reloads
         shot_number = len(st.session_state.shot_history) + 1
         new_shot = {"Shot #": shot_number, "Club Used": club_used, "Distance": f"{distance_in_yards} Yards"}
         st.session_state.shot_history.append(new_shot)
         save_persistent_history(st.session_state.shot_history)
         st.session_state.last_calculated_distance = distance_in_yards
         
-        # Clear parameters so it doesn't loop log
         st.query_params.clear()
         st.toast(f"🚀 Shot logged: {distance_in_yards} Yards!", icon="🏌️‍♂️")
         st.rerun()
@@ -55,16 +52,16 @@ st.session_state.saved_club = selected_club
 st.divider()
 st.subheader("2. Track Your Distance")
 
-# INVISIBLE LOCAL COMPONENT: Handles the buttons and hardware GPS communication smoothly inside Safari
+# LOCAL COMPONENT: Styled exactly to match your styles.py look
 gps_hardware_bridge = f"""
-<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-        <button id="btn1" onclick="teeOff()" style="background-color: #2E7D32; color: #000000; font-size: 20px; font-weight: 900; padding: 18px 10px; border-radius: 12px; border: 3px solid #000000; box-shadow: 6px 6px 0px 0px #000000; text-transform: uppercase;">🔴 Click 1: Teed Off</button>
-        <button id="btn2" onclick="atBall()" disabled style="background-color: #A5D6A7; color: #555555; opacity: 0.8; font-size: 20px; font-weight: 900; padding: 18px 10px; border-radius: 12px; border: 3px solid #000000; box-shadow: 6px 6px 0px 0px #000000; text-transform: uppercase; cursor: not-allowed;">静态 ⚪ Click 2: At Ball</button>
+<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0;">
+    <div style="display: flex; gap: 1rem; width: 100%; box-sizing: border-box; margin-bottom: 12px;">
+        <button id="btn1" onclick="teeOff()" style="flex: 1; background-color: #2E7D32; color: #000000; font-size: 22px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; padding: 18px 10px; border-radius: 12px; border: 3px solid #000000; box-shadow: 6px 6px 0px 0px #000000; cursor: pointer;">🔴 Click 1: Just Teed Off</button>
+        <button id="btn2" onclick="atBall()" disabled style="flex: 1; background-color: #A5D6A7; color: #555555; opacity: 0.8; font-size: 22px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; padding: 18px 10px; border-radius: 12px; border: 3px solid #000000; box-shadow: 6px 6px 0px 0px #000000; cursor: not-allowed;">⚪ Click 2: At My Ball</button>
     </div>
     
     <div id="accuracy-meter" style="background-color: #F5F5F5; border: 2px dashed #9E9E9E; padding: 10px; border-radius: 8px; text-align: center; color: #616161; font-weight: 800; font-size: 15px;">
-        🛰️ Initializing GPS satellite bridge...
+        🛰️ Stabilizing mobile satellite stream...
     </div>
 </div>
 
@@ -76,13 +73,12 @@ gps_hardware_bridge = f"""
     let currentAccuracy = null;
     const selectedClub = "{selected_club}";
 
-    // Instantly keeps the iPhone GPS chip hot and updating natively without server lag
     if (navigator.geolocation) {{
         navigator.geolocation.watchPosition(
             (pos) => {{
                 currentLat = pos.coords.latitude;
                 currentLon = pos.coords.longitude;
-                currentAccuracy = pos.coords.accuracy * 1.09361; // convert to yards
+                currentAccuracy = pos.coords.accuracy * 1.09361;
                 updateMeter();
             }},
             (err) => {{
@@ -105,25 +101,27 @@ gps_hardware_bridge = f"""
         meter.style.backgroundColor = bg;
         meter.style.border = `2px solid ${{text}}`;
         meter.style.color = text;
-        meter.innerText = `🛰️ GPS Status: ${{status}} | Margin of Error: ±${{currentAccuracy.toFixed(1)}} Yards`;
+        meter.innerHTML = `🛰️ <b>GPS Status:</b> ${{status}} &nbsp;|&nbsp; <b>Margin of Error:</b> ±${{currentAccuracy.toFixed(1)}} Yards`;
     }}
 
     function teeOff() {{
         if (!currentLat) return;
         teeLat = currentLat;
         teeLon = currentLon;
-        document.getElementById('btn2').disabled = false;
-        document.getElementById('btn2').style.backgroundColor = "#2E7D32";
-        document.getElementById('btn2').style.color = "#000000";
-        document.getElementById('btn2').style.cursor = "pointer";
-        document.getElementById('btn2').innerText = "⚪ Click 2: At My Ball";
+        
+        const btn2 = document.getElementById('btn2');
+        btn2.disabled = false;
+        btn2.style.backgroundColor = "#2E7D32";
+        btn2.style.color = "#000000";
+        btn2.style.cursor = "pointer";
+        btn2.style.opacity = "1";
+        
         alert("🎯 Tee location saved locally!");
     }}
 
     function atBall() {{
         if (!teeLat || !currentLat) return;
         
-        // Instant Earth Distance calculation
         const lat1 = teeLat * Math.PI / 180;
         const lon1 = teeLon * Math.PI / 180;
         const lat2 = currentLat * Math.PI / 180;
@@ -135,13 +133,12 @@ gps_hardware_bridge = f"""
         const c = 2 * Math.atan2(Math.sqrt(a), math.sqrt(1-a));
         const yards = Math.round(6967410 * c);
         
-        // Pass calculation back to Streamlit database instantly
         window.parent.location.search = `?calculated_yards=${{yards}}&club=${{encodeURIComponent(selectedClub)}}`;
     }}
 </script>
 """
-# Renders our native layout container smoothly
-html(gps_hardware_bridge, height=130)
+# Renders the corrected container seamlessly matching your styles
+html(gps_hardware_bridge, height=135)
 
 if st.session_state.last_calculated_distance is not None:
     st.markdown(f"""
@@ -150,6 +147,8 @@ if st.session_state.last_calculated_distance is not None:
             <div class="distance-number">{st.session_state.last_calculated_distance} YARDS</div>
         </div>
     """, unsafe_allow_html=True)
+
+st.info(f"🔄 Ball is live. Walk to your shot. Notice how your accuracy error drops the closer you get to your ball!")
 
 st.divider()
 st.subheader("📋 Your Shot History Scorecard")
@@ -176,6 +175,7 @@ with col_clear2:
         st.session_state.shot_history = []
         save_persistent_history([])
         st.rerun()
+
 
 
 
