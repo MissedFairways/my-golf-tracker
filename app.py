@@ -32,8 +32,15 @@ if 'saved_club' not in st.session_state:
 if 'last_calculated_distance' not in st.session_state:
     st.session_state.last_calculated_distance = None
 
-# 3. GPS Data Processing Loop
-location = get_geolocation(component_key=f"gps_tracker_{st.session_state.gps_trigger}")
+# 3. GPS Data Processing Loop (FIXED WITH HIGH ACCURACY OPTIONS)
+location = get_geolocation(
+    component_key=f"gps_tracker_{st.session_state.gps_trigger}",
+    options={
+        "enableHighAccuracy": True,
+        "timeout": 10000,
+        "maximumAge": 0
+    }
+)
 
 if location is None:
     st.info("🔄 Connecting to iPhone GPS satellites... Please allow location access if prompted.")
@@ -147,6 +154,7 @@ else:
             save_persistent_history([])
             st.session_state.gps_trigger += 1
             st.rerun()
+
 
 
 
