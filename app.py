@@ -1,5 +1,5 @@
 import streamlit as st
-from streamlit_js_eval import get_geolocation
+from streamlit_js_eval import streamlit_js_eval
 import math
 import pandas as pd
 import time
@@ -32,20 +32,36 @@ if 'saved_club' not in st.session_state:
 if 'last_calculated_distance' not in st.session_state:
     st.session_state.last_calculated_distance = None
 
-# 3. GPS Data Processing Loop (FIXED WITH HIGH ACCURACY OPTIONS)
-location = get_geolocation(
-    component_key=f"gps_tracker_{st.session_state.gps_trigger}",
-    options={
-        "enableHighAccuracy": True,
-        "timeout": 10000,
-        "maximumAge": 0
-    }
+# 3. GPS Data Processing Loop (CUSTOM HIGH ACCURACY FIX)
+js_gps_script = """
+new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            resolve({
+                coords: {
+                    latitude: pos.coords.latitude,
+                    longitude: pos.coords.longitude,
+                    accuracy: pos.coords.accuracy
+                }
+            });
+        },
+        (err) => { resolve({ error: err.message }); },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+});
+"""
+
+location = streamlit_js_eval(
+    js_expressions=js_gps_script, 
+    key=f"gps_tracker_{st.session_state.gps_trigger}"
 )
 
 if location is None:
     st.info("🔄 Connecting to iPhone GPS satellites... Please allow location access if prompted.")
+elif 'error' in location:
+    st.warning(f"⚠️ GPS Error: {location['error']}. Make sure Safari has location access.")
 elif 'coords' not in location:
-    st.warning("⚠️ Waiting for location permissions. Please make sure Safari is allowed to use your GPS.")
+    st.warning("⚠️ Waiting for location permissions. Please check your settings.")
 else:
     current_lat = location['coords']['latitude']
     current_lon = location['coords']['longitude']
@@ -154,6 +170,7 @@ else:
             save_persistent_history([])
             st.session_state.gps_trigger += 1
             st.rerun()
+
 
 
 
