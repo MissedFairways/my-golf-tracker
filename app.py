@@ -1,5 +1,5 @@
 import streamlit as st
-from streamlit_js_eval import get_geolocation
+import streamlit.components.v1 as components
 import math
 import pandas as pd
 
@@ -27,22 +27,103 @@ if 'saved_club' not in st.session_state:
 if 'last_calculated_distance' not in st.session_state:
     st.session_state.last_calculated_distance = None
 
-# 3. HIGH-ACCURACY HARDWARE GPS LOCK
-# This forces the iPhone to bypass cheap cell tower estimation and locks on to real satellite data.
-location = get_geolocation(component_key="high_accuracy_golf_gps")
+# 3. THE INSTANT SATELLITE BRIDGE COMPONENT
+# This script listens for user clicks and forces Safari to extract fresh dual-frequency GPS data immediately.
+gps_bridge_html = """
+<script>
+    function captureHardwareGPS(actionType) {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+                    
+                    // Pipe the fresh, live numbers directly back to Python instantly
+                    window.parent.postMessage({
+                        type: 'streamlit:setComponentValue',
+                        value: actionType + ":" + lat + "," + lon + "," + accuracy
+                    }, '*');
+                },
+                function(error) {
+                    window.parent.postMessage({
+                        type: 'streamlit:setComponentValue',
+                        value: "ERROR:" + error.code
+                    }, '*');
+                },
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 10000
+                }
+            );
+        }
+    }
 
-# Read the streaming GPS telemetry values
-current_lat = None
-current_lon = None
-current_accuracy = None
+    // Read instructions sent from Python buttons
+    window.addEventListener('message', function(e) {
+        if (e.data.type === 'trigger_click1') {
+            captureHardwareGPS('TEE');
+        } else if (e.data.type === 'trigger_click2') {
+            captureHardwareGPS('BALL');
+        }
+    });
+</script>
+"""
 
-if location and 'coords' in location:
-    current_lat = location['coords']['latitude']
-    current_lon = location['coords']['longitude']
-    # If the phone doesn't provide a precise metric accuracy, default to a safe standard
-    current_accuracy = location['coords'].get('accuracy', 10)
+# Establish the secure communications array channel
+gps_response = components.html(gps_bridge_html, height=0, width=0)
 
-# 4. Main App Layout and Mechanics (Always visible)
+# Process incoming hardware payloads immediately when a button is touched
+if gps_response and (":" in str(gps_response)):
+    payload = str(gps_response)
+    
+    if payload.startswith("TEE:"):
+        try:
+            coords = payload.replace("TEE:", "").split(",")
+            st.session_state.tee_lat = float(coords[0])
+            st.session_state.tee_lon = float(coords[1])
+            st.session_state.last_calculated_distance = None
+            st.toast("🎯 Tee box coordinates locked into memory!", icon="📍")
+        except:
+            st.toast("⚠️ GPS data corrupt. Please try clicking again.", icon="❌")
+            
+    elif payload.startswith("BALL:"):
+        try:
+            coords = payload.replace("BALL:", "").split(",")
+            ball_lat = float(coords[0])
+            ball_lon = float(coords[1])
+            
+            # Run the Haversine formula calculation instantly using the fresh data
+            if st.session_state.tee_lat is not None:
+                lat1, lon1 = math.radians(st.session_state.tee_lat), math.radians(st.session_state.tee_lon)
+                lat2, lon2 = math.radians(ball_lat), math.radians(ball_lon)
+                dlat, dlon = lat2 - lat1, lon2 - lon1
+                
+                a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+                c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+                distance_in_yards = round(6967410 * c)
+                
+                st.session_state.last_calculated_distance = distance_in_yards
+                shot_number = len(st.session_state.shot_history) + 1
+                
+                new_shot = {
+                    "Shot #": shot_number, 
+                    "Club Used": st.session_state.saved_club, 
+                    "Distance": f"{distance_in_yards} Yards"
+                }
+                st.session_state.shot_history.append(new_shot)
+                save_persistent_history(st.session_state.shot_history)
+                
+                # Instantly clear variables so the application stands ready for the next shot
+                st.session_state.tee_lat = None
+                st.session_state.tee_lon = None
+                st.toast(f"🚀 Shot logged: {distance_in_yards} Yards!", icon="🏌️‍♂️")
+                st.rerun()
+        except:
+            st.toast("⚠️ Distance math failed. Please retry Click 2.", icon="❌")
+
+# 4. Main User Interface Layout
 st.subheader("1. Setup Your Shot")
 club_options = ["Driver", "Mini-Driver", "3-Wood", "4-Iron", "5-Iron", "6-Iron", "7-Iron", "8-Iron", "9-Iron", "Pitching Wedge", "Gap Wedge", "54° Wedge", "60° Wedge"]
 selected_club = st.selectbox("Which club are you hitting?", options=club_options, index=club_options.index(st.session_state.saved_club) if st.session_state.saved_club in club_options else 0)
@@ -53,46 +134,25 @@ st.subheader("2. Track Your Distance")
 col1, col2 = st.columns(2)
 
 with col1:
-    # Button is only enabled if the satellite lock is established
-    is_click1_disabled = (current_lat is None)
-    if st.button("🔴 Click 1: Just Teed Off", use_container_width=True, disabled=is_click1_disabled):
-        st.session_state.tee_lat = current_lat
-        st.session_state.tee_lon = current_lon
-        st.session_state.last_calculated_distance = None
-        st.toast(f"🎯 Tee location locked!", icon="📍")
-        st.rerun()
+    # Click 1 Component Execution
+    if st.button("🔴 Click 1: Just Teed Off", use_container_width=True):
+        st.markdown("""
+            <script>
+                window.parent.postMessage({type: 'trigger_click1'}, '*');
+            </script>
+        """, unsafe_allow_html=True)
 
 with col2:
-    # Button is only enabled if Click 1 was clicked AND we have a fresh coordinate
-    is_click2_disabled = (st.session_state.tee_lat is None or current_lat is None)
+    # Click 2 Component Execution (Disabled until Click 1 sets a starting baseline)
+    is_click2_disabled = (st.session_state.tee_lat is None)
     if st.button("⚪ Click 2: At My Ball", use_container_width=True, disabled=is_click2_disabled):
-        # Calculate distance using precise Haversine formulas instantly
-        lat1, lon1 = math.radians(st.session_state.tee_lat), math.radians(st.session_state.tee_lon)
-        lat2, lon2 = math.radians(current_lat), math.radians(current_lon)
-        dlat, dlon = lat2 - lat1, lon2 - lon1
-        
-        a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
-        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-        distance_in_yards = round(6967410 * c)
-        
-        st.session_state.last_calculated_distance = distance_in_yards
-        shot_number = len(st.session_state.shot_history) + 1
-        
-        new_shot = {
-            "Shot #": shot_number, 
-            "Club Used": st.session_state.saved_club, 
-            "Distance": f"{distance_in_yards} Yards"
-        }
-        st.session_state.shot_history.append(new_shot)
-        save_persistent_history(st.session_state.shot_history)
-        
-        # Reset the current shot tracking so it's clean for the next shot
-        st.session_state.tee_lat = None
-        st.session_state.tee_lon = None
-        st.toast(f"🚀 Shot logged: {distance_in_yards} Yards!", icon="🏌️‍♂️")
-        st.rerun()
+        st.markdown("""
+            <script>
+                window.parent.postMessage({type: 'trigger_click2'}, '*');
+            </script>
+        """, unsafe_allow_html=True)
 
-# Scorecard Result Board Display
+# Scorecard Results Visualization Dashboard
 if st.session_state.last_calculated_distance is not None:
     st.markdown(f"""
         <div class="distance-display-box">
@@ -101,13 +161,11 @@ if st.session_state.last_calculated_distance is not None:
         </div>
     """, unsafe_allow_html=True)
 
-# Dynamic status helper banner to keep the user informed
-if current_lat is None:
-    st.info("🛰️ Connecting to iPhone GPS satellites... Please make sure Safari is allowed to use your location.")
-elif st.session_state.tee_lat:
-    st.info("🔄 Ball is live. Walk to your shot, stand still for a split second, then tap Click 2.")
+# Dynamic status helper banner
+if st.session_state.tee_lat:
+    st.info("🔄 Ball tracking active. Walk out to your landing spot, stand still for a second, then hit Click 2.")
 else:
-    st.success("✅ GPS Signal Engaged. Ready for your shot.")
+    st.success("✅ System Armored. Stand on the tee box and tap Click 1 to begin.")
 
 st.divider()
 st.subheader("📋 Your Shot History Scorecard")
@@ -137,6 +195,7 @@ with col_clear2:
         st.session_state.shot_history = []
         save_persistent_history([])
         st.rerun()
+
 
 
 
