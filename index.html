@@ -436,15 +436,37 @@
         };
 
         // --- Interaction Event Command Listeners ---
-                                               // --- CSV Data Export Engine ---
+                                                       // --- CSV Data Export Engine ---
         document.getElementById('btnExportCSV').addEventListener('click', () => {
             if (scoreHistory.length === 0) {
                 alert("Your scorecard is empty! No data to export yet.");
                 return;
             }
-            let csvContent = "Club,Distance\n";
+            
+            // Section 1: Raw Shot History List
+            let csvContent = "RAW SHOT HISTORY\nClub,Distance\n";
             scoreHistory.forEach(item => {
                 csvContent += `"${item.club}","${item.distance} Yards"\n`;
+            });
+            
+            // Add space between sections
+            csvContent += "\n\n";
+            
+            // Section 2: Calculate Averages On-The-Fly
+            csvContent += "CLUB STATISTICS AVERAGES\nClub,Average Distance,Total Shots Tracked\n";
+            const statsMap = {};
+            scoreHistory.forEach(item => {
+                if (!statsMap[item.club]) {
+                    statsMap[item.club] = { totalDist: 0, count: 0 };
+                }
+                statsMap[item.club].totalDist += item.distance;
+                statsMap[item.club].count += 1;
+            });
+            
+            Object.keys(statsMap).forEach(clubName => {
+                const data = statsMap[clubName];
+                const avg = Math.round(data.totalDist / data.count);
+                csvContent += `"${clubName}","${avg} Yards","${data.count}"\n`;
             });
             
             // Safe mobile data transfer method
@@ -465,6 +487,7 @@
             // Fallback safety release
             setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
         });
+
 
         // --- Native Contact Sharing System ---
         document.getElementById('btnShareApp').addEventListener('click', () => {
@@ -551,7 +574,7 @@
 
 
 </body>
-</html>
+</html
 
 
 
