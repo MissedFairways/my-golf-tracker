@@ -436,24 +436,34 @@
         };
 
         // --- Interaction Event Command Listeners ---
-                                       // --- CSV Data Export Engine ---
+                                               // --- CSV Data Export Engine ---
         document.getElementById('btnExportCSV').addEventListener('click', () => {
             if (scoreHistory.length === 0) {
                 alert("Your scorecard is empty! No data to export yet.");
                 return;
             }
-            let csvContent = "data:text/csv;charset=utf-8,Club,Distance\n";
+            let csvContent = "Club,Distance\n";
             scoreHistory.forEach(item => {
                 csvContent += `"${item.club}","${item.distance} Yards"\n`;
             });
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "genx_golf_scorecard.csv");
-            link.setAttribute("target", "_blank");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            
+            // Safe mobile data transfer method
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const blobUrl = URL.createObjectURL(blob);
+            
+            if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+                window.navigator.msSaveOrOpenBlob(blob, "genx_golf_scorecard.csv");
+            } else {
+                const link = document.createElement("a");
+                link.href = blobUrl;
+                link.setAttribute("download", "genx_golf_scorecard.csv");
+                link.target = "_blank";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            // Fallback safety release
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
         });
 
         // --- Native Contact Sharing System ---
