@@ -2,64 +2,64 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Distance Tracker - Advanced GPS</title>
-    <!-- iOS Home Screen Icons -->
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    <!-- External CSS Sheet -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DISTANCE TRACKER - ADVANCED GPS</title>
+    
+    <!-- iPhone Home Screen Custom App Button Icon Configuration -->
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+    <!-- Linked External Style Sheet -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-    <header class="branding-header">
-        <div class="logo-container">
-            <span class="logo-text">Gen X Logo</span>
-        </div>
-        <h1>DISTANCE TRACKER</h1>
+    <header class="brand-header">
+        <img src="Gen X Logo White_for embroidery.png" alt="Gen X Logo" class="brand-logo">
+        <div class="brand-title">DISTANCE TRACKER</div>
     </header>
 
-    <main class="app-container">
-        <!-- 1. Setup Your Shot -->
-        <section class="card setup-section">
+    <main>
+        <section class="retro-container">
             <h3>1. Setup Your Shot</h3>
-            <label for="clubSelect">Select Club:</label>
-            <select id="clubSelect">
-                <option value="Driver">Driver</option>
-                <option value="Mini-Driver">Mini-Driver</option>
-                <option value="3-Wood">3-Wood</option>
-                <option value="4-Iron">4-Iron</option>
-                <option value="5-Iron">5-Iron</option>
-                <option value="6-Iron">6-Iron</option>
-                <option value="7-Iron">7-Iron</option>
-                <option value="8-Iron">8-Iron</option>
-                <option value="9-Iron">9-Iron</option>
-                <option value="Pitching Wedge">Pitching Wedge</option>
-                <option value="Gap Wedge">Gap Wedge</option>
-                <option value="54° Wedge">54° Wedge</option>
-                <option value="60° Wedge">60° Wedge</option>
-            </select>
+            <div class="form-group">
+                <label for="clubSelect">Select Club:</label>
+                <select id="clubSelect">
+                    <option value="Driver">Driver</option>
+                    <option value="Mini-Driver">Mini-Driver</option>
+                    <option value="3-Wood">3-Wood</option>
+                    <option value="4-Iron">4-Iron</option>
+                    <option value="5-Iron">5-Iron</option>
+                    <option value="6-Iron">6-Iron</option>
+                    <option value="7-Iron">7-Iron</option>
+                    <option value="8-Iron">8-Iron</option>
+                    <option value="9-Iron">9-Iron</option>
+                    <option value="Pitching Wedge">Pitching Wedge</option>
+                    <option value="Gap Wedge">Gap Wedge</option>
+                    <option value="54° Wedge">54° Wedge</option>
+                    <option value="60° Wedge">60° Wedge</option>
+                </select>
+            </div>
         </section>
 
-        <!-- 2. Track Your Distance -->
-        <section class="card tracking-section">
+        <section class="retro-container">
             <h3>2. Track Your Distance</h3>
-            <div class="button-group">
-                <button id="teeOffBtn" class="btn btn-primary">🔴 Click 1: Tee Off</button>
-                <button id="atBallBtn" class="btn btn-secondary">⚪ Click 2: At Ball</button>
+            <div class="btn-grid">
+                <button id="btnClick1" class="btn-click1">🔴 Click 1: Tee Off</button>
+                <button id="btnClick2" class="btn-click2">⚪ Click 2: At Ball</button>
             </div>
-            <p class="instruction-text">⛳ Stand on the tee box and tap Click 1.</p>
-            
-            <div class="display-container">
-                <h4>🏌️‍♂️ Last Shot Distance</h4>
-                <div id="distanceDisplay" class="distance-badge">0 YARDS</div>
+            <div id="statusMessage" class="status-box">
+                ⛳ Stand on the tee box and tap Click 1.
+            </div>
+            <div class="distance-display">
+                <div class="distance-label">🏌🏽‍♂️ Last Shot Distance</div>
+                <div id="distanceOutput" class="distance-num">0 YARDS</div>
             </div>
         </section>
 
-        <!-- 3. Shot History Scorecard -->
-        <section class="card history-section">
+        <section class="retro-container">
             <h3>📋 Your Shot History Scorecard</h3>
-            <div class="table-responsive">
-                <table id="scorecardTable">
+            <div style="overflow-x: auto;">
+                <table class="scorecard-table" id="scorecardTable">
                     <thead>
                         <tr>
                             <th>Club</th>
@@ -68,19 +68,16 @@
                         </tr>
                     </thead>
                     <tbody id="scorecardBody">
-                        <tr id="emptyScorecardRow">
-                            <td colspan="3" class="text-muted">No shots recorded yet for this round.</td>
-                        </tr>
+                        <!-- Dynamic rows appear here -->
                     </tbody>
                 </table>
             </div>
         </section>
 
-        <!-- 4. Club Averages -->
-        <section class="card averages-section">
+        <section class="retro-container">
             <h3>📊 Your Club Averages</h3>
-            <div class="table-responsive">
-                <table id="averagesTable">
+            <div style="overflow-x: auto;">
+                <table class="stats-table" id="statsTable">
                     <thead>
                         <tr>
                             <th>Club</th>
@@ -89,24 +86,19 @@
                         </tr>
                     </thead>
                     <tbody id="averagesBody">
-                        <tr id="emptyAveragesRow">
-                            <td colspan="3" class="text-muted">Track shots to calculate your averages!</td>
-                        </tr>
+                        <!-- Dynamic metrics appear here -->
                     </tbody>
                 </table>
             </div>
+            <button id="btnClearAll" class="btn-clear">🗑 Clear Entire Scorecard</button>
         </section>
-
-        <!-- Control Actions -->
-        <div class="control-actions">
-            <button id="clearScorecardBtn" class="btn btn-danger">🗑 Clear Entire Scorecard</button>
-        </div>
     </main>
 
-    <!-- External JavaScript Application Logic -->
+    <!-- Linked External Application Logic -->
     <script src="app.js"></script>
 </body>
 </html>
+
 
 
 
