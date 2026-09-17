@@ -2,414 +2,504 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- Inline Apple Touch Icon using a clean SVG golf graphic that iOS Safari won't block -->
-    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://w3.org' viewBox='0 0 100 100' width='180' height='180'><rect width='100' height='100' fill='%23FFFFFF'/><circle cx='50' cy='50' r='42' fill='none' stroke='%23000000' stroke-width='6'/><circle cx='50' cy='50' r='30' fill='none' stroke='%232E7D32' stroke-width='4'/><path d='M48 25 L48 70 M48 28 L68 38 L48 48 Z' fill='%232E7D32' stroke='%23000000' stroke-width='3' stroke-linejoin='round'/><circle cx='50' cy='70' r='4' fill='%23000000'/></svg>">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DISTANCE TRACKER - ADVANCED GPS</title>
+    
+    <!-- iPhone Home Screen Custom App Button Icon Configuration -->
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
     <style>
+        :root {
+            --primary-green: #1b4332;
+            --accent-gold: #d4af37;
+            --light-bg: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-dark: #2d3748;
+            --text-light: #718096;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
-            background-color: #FFFFFF;
-            color: #000000;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            line-height: 1.5;
+            padding: 10px;
             max-width: 500px;
             margin: 0 auto;
         }
-        /* Center-Justified Custom Logo Header Layout */
-        .logo-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin-top: 15px;
-            margin-bottom: 25px;
-            background-color: #1a3c22; /* Dark green badge backdrop so your white logo pops! */
-            padding: 20px;
-            border-radius: 16px;
-            border: 3px solid #000000;
-            box-shadow: 4px 4px 0px 0px #000000;
+
+        .brand-header {
+            background-color: var(--primary-green);
+            color: #ffffff;
             text-align: center;
+            padding: 15px 10px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 15px;
         }
-        .logo-image {
-            max-width: 185px;       /* Made 30% larger (increased from 140px) */
+
+        .brand-logo {
+            max-width: 185px;
             height: auto;
-            margin-bottom: 12px;
+            display: block;
+            margin: 0 auto 5px auto;
         }
-        .subtitle {
-            text-align: center;
-            color: #FFFFFF; 
-            font-size: 1.5rem;       /* Made 30% smaller (decreased from 2.2rem) */
-            font-weight: 900;
-            letter-spacing: -0.5px;
-            margin-top: 0;
-            margin-bottom: 0;
-            text-transform: uppercase;
-        }
-        h3 {
-            font-size: 1.4rem;
+
+        .brand-title {
+            font-size: 1.5rem;
             font-weight: 800;
-            margin-bottom: 10px;
-            text-transform: uppercase;
+            letter-spacing: 1px;
         }
+
+        .retro-container {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            color: var(--primary-green);
+            margin-bottom: 12px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 5px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
         select {
             width: 100%;
-            font-size: 18px;
-            font-weight: 700;
             padding: 12px;
-            border-radius: 12px;
-            border: 3px solid #000000;
-            box-shadow: 4px 4px 0px 0px #000000;
-            background-color: #FFFFFF;
-            margin-bottom: 20px;
+            font-size: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background-color: #fff;
+            color: var(--text-dark);
+            outline: none;
+            transition: border-color 0.2s;
         }
-        .btn-container {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
+
+        select:focus {
+            border-color: var(--primary-green);
         }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
         button {
-            flex: 1;
-            background-color: #2E7D32;
-            color: #000000;
-            font-size: 18px;
-            font-weight: 900;
-            text-transform: uppercase;
-            padding: 18px 10px;
-            border-radius: 12px;
-            border: 3px solid #000000;
-            box-shadow: 4px 4px 0px 0px #000000;
+            padding: 14px 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
             cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        button:disabled {
-            background-color: #A5D6A7;
-            color: #555555;
-            cursor: not-allowed;
-            box-shadow: none;
-            opacity: 0.6;
+
+        button:active {
+            transform: scale(0.98);
         }
-        #status {
-            background-color: #E8F5E9;
-            color: #2E7D32;
-            border: 3px solid #000000;
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: 800;
+
+        .btn-click1 {
+            background-color: #e53e3e;
+            color: white;
+        }
+
+        .btn-click2 {
+            background-color: #3182ce;
+            color: white;
+        }
+
+        .btn-clear {
+            background-color: #718096;
+            color: white;
+            width: 100%;
+            padding: 10px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .status-box {
+            background-color: #edf2f7;
+            border-left: 4px solid var(--primary-green);
+            padding: 10px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+        }
+
+        .distance-display {
             text-align: center;
-            font-size: 16px;
-            margin-bottom: 25px;
+            background: linear-gradient(135deg, var(--primary-green), #2d6a4f);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
         }
-        .distance-box {
-            background-color: #FFFFFF;
-            border: 4px solid #000000;
-            border-radius: 16px;
-            padding: 15px;
-            text-align: center;
-            box-shadow: 4px 4px 0px 0px #2E7D32;
-            margin-bottom: 25px;
-            display: none;
-        }
+
         .distance-label {
-            font-size: 1.1rem;
-            font-weight: 900;
+            font-size: 0.85rem;
             text-transform: uppercase;
-            color: #111111;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            margin-bottom: 2px;
         }
-        .distance-number {
-            font-size: 3.2rem;
-            color: #2E7D32;
+
+        .distance-num {
+            font-size: 3rem;
             font-weight: 900;
+            font-family: monospace;
         }
-        hr {
-            border: 0;
-            height: 2px;
-            background: #000000;
-            margin: 25px 0;
-        }
-        table {
+
+        .scorecard-table, .stats-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
-            border: 3px solid #000000;
+            font-size: 0.9rem;
         }
-        th, td {
-            border: 2px solid #000000;
-            padding: 10px;
+
+        .scorecard-table th, .stats-table th {
+            background-color: #edf2f7;
+            color: var(--text-dark);
             text-align: left;
-            font-size: 16px;
-            font-weight: 700;
+            padding: 8px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
         }
-        th {
-            background-color: #E8F5E9;
+
+        .scorecard-table td, .stats-table td {
+            padding: 8px;
+            border-bottom: 1px solid var(--border-color);
         }
-        .delete-shot-btn {
-            background-color: #FFCDD2;
-            color: #B71C1C;
-            border: 2px solid #000000;
-            padding: 5px 8px;
-            font-size: 13px;
-            font-weight: 800;
-            border-radius: 6px;
-            box-shadow: 2px 2px 0px 0px #000000;
-            text-transform: uppercase;
-            cursor: pointer;
+
+        .scorecard-table tr:nth-child(even), .stats-table tr:nth-child(even) {
+            background-color: #f7fafc;
         }
-        .avg-card {
-            background-color: #FFFFFF;
-            border: 3px solid #000000;
-            border-radius: 12px;
-            padding: 12px 20px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 4px 4px 0px 0px #000000;
-        }
-        .avg-club {
-            font-size: 20px;
-            font-weight: 900;
-            color: #000000;
-        }
-        .avg-dist {
-            font-size: 22px;
-            font-weight: 900;
-            color: #2E7D32;
-        }
-        .clear-btn {
-            background-color: #FFCDD2;
-            color: #B71C1C;
-            border: 3px solid #000000;
-            box-shadow: 4px 4px 0px 0px #000000;
-            width: 100%;
-            margin-top: 15px;
+
+        .empty-text {
+            color: var(--text-light);
+            font-style: italic;
+            text-align: center;
+            padding: 10px 0;
         }
     </style>
 </head>
 <body>
 
-    <!-- Updated Centered Image Header Frame -->
-    <div class="logo-container">
-        <img class="logo-image" src="Gen X Logo White_for embroidery.png" alt="Gen X Logo">
-        <div class="subtitle">DISTANCE TRACKER</div>
-    </div>
+    <header class="brand-header">
+        <img src="Gen X Logo White_for embroidery.png" alt="Gen X Logo" class="brand-logo">
+        <div class="brand-title">DISTANCE TRACKER</div>
+    </header>
 
-    <h3>1. Setup Your Shot</h3>
-    <select id="clubSelect">
-        <option value="Driver">Driver</option>
-        <option value="Mini-Driver">Mini-Driver</option>
-        <option value="3-Wood">3-Wood</option>
-        <option value="4-Iron">4-Iron</option>
-        <option value="5-Iron">5-Iron</option>
-        <option value="6-Iron">6-Iron</option>
-        <option value="7-Iron">7-Iron</option>
-        <option value="8-Iron">8-Iron</option>
-        <option value="9-Iron">9-Iron</option>
-        <option value="Pitching Wedge">Pitching Wedge</option>
-        <option value="Gap Wedge">Gap Wedge</option>
-        <option value="54° Wedge">54° Wedge</option>
-        <option value="60° Wedge">60° Wedge</option>
-    </select>
+    <main>
+        <section class="retro-container">
+            <h3>1. Setup Your Shot</h3>
+            <div class="form-group">
+                <label for="clubSelect">Select Club:</label>
+                <select id="clubSelect">
+                    <option value="Driver">Driver</option>
+                    <option value="Mini-Driver">Mini-Driver</option>
+                    <option value="3-Wood">3-Wood</option>
+                    <option value="4-Iron">4-Iron</option>
+                    <option value="5-Iron">5-Iron</option>
+                    <option value="6-Iron">6-Iron</option>
+                    <option value="7-Iron">7-Iron</option>
+                    <option value="8-Iron">8-Iron</option>
+                    <option value="9-Iron">9-Iron</option>
+                    <option value="Pitching Wedge">Pitching Wedge</option>
+                    <option value="Gap Wedge">Gap Wedge</option>
+                    <option value="54° Wedge">54° Wedge</option>
+                    <option value="60° Wedge">60° Wedge</option>
+                </select>
+            </div>
+        </section>
 
-    <hr>
+        <section class="retro-container">
+            <h3>2. Track Your Distance</h3>
+            <div class="btn-grid">
+                <button id="btnClick1" class="btn-click1">🔴 Click 1: Tee Off</button>
+                <button id="btnClick2" class="btn-click2">⚪ Click 2: At Ball</button>
+            </div>
+            <div id="statusMessage" class="status-box">
+                ⛳ Stand on the tee box and tap Click 1.
+            </div>
+            <div class="distance-display">
+                <div class="distance-label">🏌‍♂️ Last Shot Distance</div>
+                <div id="distanceOutput" class="distance-num">0 YARDS</div>
+            </div>
+        </section>
 
-    <h3>2. Track Your Distance</h3>
-    <div class="btn-container">
-        <button id="click1" onclick="handleTeeClick()">🔴 Click 1: Tee Off</button>
-        <button id="click2" onclick="handleBallClick()" disabled>⚪ Click 2: At Ball</button>
-    </div>
+        <section class="retro-container">
+            <h3>📋 Your Shot History Scorecard</h3>
+            <div style="overflow-x: auto;">
+                <table class="scorecard-table" id="scorecardTable">
+                    <thead>
+                        <tr>
+                            <th>Club</th>
+                            <th>Distance</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scorecardBody">
+                        <!-- Dynamic rows fit here -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="scorecardEmptyText" class="empty-text">No shots recorded yet for this round.</div>
+        </section>
 
-    <div id="status">⛳ Stand on the tee box and tap Click 1.</div>
+        <section class="retro-container">
+            <h3>📊 Your Club Averages</h3>
+            <div style="overflow-x: auto;">
+                <table class="stats-table" id="statsTable">
+                    <thead>
+                        <tr>
+                            <th>Club</th>
+                            <th>Avg Distance</th>
+                            <th>Shots</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statsBody">
+                        <!-- Dynamic rows fit here -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="statsEmptyText" class="empty-text">Track shots to calculate your averages!</div>
+            <button id="btnClearAll" class="btn-clear">🗑 Clear Entire Scorecard</button>
+        </section>
+    </main>
+    <script>
+        // --- Core Application State variables ---
+        let p1_lat = null;
+        let p1_lon = null;
+        let current_club = "Driver";
+        let scoreHistory = [];
+        let watchId = null;
 
-    <div id="distanceDisplay" class="distance-box">
-        <div class="distance-label">🏌️‍♂️ Last Shot Distance</div>
-        <div id="yardsNumber" class="distance-number">0 YARDS</div>
-    </div>
+        // --- Core DOM Elements ---
+        const btnClick1 = document.getElementById('btnClick1');
+        const btnClick2 = document.getElementById('btnClick2');
+        const btnClearAll = document.getElementById('btnClearAll');
+        const clubSelect = document.getElementById('clubSelect');
+        const statusMessage = document.getElementById('statusMessage');
+        const distanceOutput = document.getElementById('distanceOutput');
+        const scorecardBody = document.getElementById('scorecardBody');
+        const scorecardEmptyText = document.getElementById('scorecardEmptyText');
+        const statsBody = document.getElementById('statsBody');
+        const statsEmptyText = document.getElementById('statsEmptyText');
 
-    <hr>
+        // --- Geolocation Haversine Math ---
+        function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // Earth radius in meters
+            const phi1 = lat1 * Math.PI / 180;
+            const phi2 = lat2 * Math.PI / 180;
+            const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+            const deltaLambda = (lon2 - lon1) * Math.PI / 180;
 
-    <h3>📋 Your Shot History Scorecard</h3>
-    <div id="scorecardTableContainer">
-        <p style="font-style: italic; color: #555555;">No shots recorded yet for this round.</p>
-    </div>
+            const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+                      Math.cos(phi1) * Math.cos(phi2) *
+                      Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-    <hr>
-
-    <h3>📊 Your Club Averages</h3>
-    <div id="averagesContainer">
-        <p style="font-style: italic; color: #555555;">Track shots to calculate your averages!</p>
-    </div>
-
-    <hr>
-    <button class="clear-btn" onclick="clearScorecard()">🗑️ Clear Entire Scorecard</button>
-
-<script>
-    let shotHistory = JSON.parse(localStorage.getItem('golf_shot_history')) || [];
-    let teeLat = null;
-    let teeLon = null;
-    let liveLat = null;
-    let liveLon = null;
-    let liveAccuracy = null;
-
-    if (navigator.geolocation) {
-        navigator.geolocation.watchPosition(
-            function(position) {
-                liveLat = position.coords.latitude;
-                liveLon = position.coords.longitude;
-                liveAccuracy = position.coords.accuracy;
-                
-                let accYards = Math.round(liveAccuracy * 1.09361);
-                
-                if (teeLat === null) {
-                    document.getElementById("status").style.backgroundColor = "#E8F5E9";
-                    document.getElementById("status").style.color = "#2E7D32";
-                    document.getElementById("status").innerHTML = "✅ Satellites locked (GPS Signal Margin: ±" + accYards + " yds). Tap Click 1.";
-                } else {
-                    document.getElementById("status").style.backgroundColor = "#FFF3E0";
-                    document.getElementById("status").style.color = "#E65100";
-                    document.getElementById("status").innerHTML = "🔄 Walking... Antenna Warm (Signal Margin: ±" + accYards + " yds). Tap Click 2 at ball.";
-                }
-            },
-            function(error) {
-                console.log("Watcher error: " + error.code);
-            },
-            { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
-        );
-    }
-
-    function calculateHaversine(lat1, lon1, lat2, lon2) {
-        const p = Math.PI / 180;
-        const a = 0.5 - Math.cos((lat2 - lat1) * p)/2 + 
-                Math.cos(lat1 * p) * Math.cos(lat2 * p) * 
-                (1 - Math.cos((lon2 - lon1) * p))/2;
-        return Math.round(2 * 6371000 * Math.asin(Math.sqrt(a)) * 1.09361);
-    }
-
-    function handleTeeClick() {
-        if (liveLat === null || liveLon === null) {
-            alert("Waiting for GPS lock. Give it just a brief moment!");
-            return;
-        }
-        teeLat = liveLat;
-        teeLon = liveLon;
-        
-        document.getElementById("click1").disabled = true;
-        document.getElementById("click2").disabled = false;
-        
-        let accYards = Math.round(liveAccuracy * 1.09361);
-        document.getElementById("status").style.backgroundColor = "#FFF3E0";
-        document.getElementById("status").style.color = "#E65100";
-        document.getElementById("status").innerHTML = "🔄 Walking... Antenna Warm (Signal Margin: ±" + accYards + " yds). Tap Click 2 at ball.";
-    }
-
-    function handleBallClick() {
-        if (teeLat === null || teeLon === null) return;
-        
-        let calculatedYards = calculateHaversine(teeLat, teeLon, liveLat, liveLon);
-        let selectedClub = document.getElementById("clubSelect").value;
-        
-        shotHistory.push({
-            club: selectedClub,
-            distance: calculatedYards,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
-        
-        localStorage.setItem('golf_shot_history', JSON.stringify(shotHistory));
-        
-        document.getElementById("yardsNumber").innerHTML = calculatedYards + " YARDS";
-        document.getElementById("distanceDisplay").style.display = "block";
-        
-        teeLat = null;
-        teeLon = null;
-        document.getElementById("click1").disabled = false;
-        document.getElementById("click2").disabled = true;
-        
-        let accYards = Math.round(liveAccuracy * 1.09361);
-        document.getElementById("status").style.backgroundColor = "#E8F5E9";
-        document.getElementById("status").style.color = "#2E7D32";
-        document.getElementById("status").innerHTML = "✅ Satellites locked (GPS Signal Margin: ±" + accYards + " yds). Tap Click 1.";
-        
-        renderTables();
-    }
-
-    function deleteShot(index) {
-        shotHistory.splice(index, 1);
-        localStorage.setItem('golf_shot_history', JSON.stringify(shotHistory));
-        renderTables();
-    }
-
-    function renderTables() {
-        const tableContainer = document.getElementById("scorecardTableContainer");
-        if (shotHistory.length === 0) {
-            tableContainer.innerHTML = '<p style="font-style: italic; color: #555555;">No shots recorded yet for this round.</p>';
-        } else {
-            let html = '<table><tr><th>Time</th><th>Club</th><th>Yards</th><th>Action</th></tr>';
-            for (let i = shotHistory.length - 1; i >= 0; i--) {
-                html += '<tr>';
-                html += '<td>' + shotHistory[i].timestamp + '</td>';
-                html += '<td>' + shotHistory[i].club + '</td>';
-                html += '<td>' + shotHistory[i].distance + ' yds</td>';
-                html += '<td><button class="delete-shot-btn" onclick="deleteShot(' + i + ')">🗑️ Delete</button></td>';
-                html += '</tr>';
-            }
-            html += '</table>';
-            tableContainer.innerHTML = html;
+            const distanceMeters = R * c;
+            const distanceYards = distanceMeters * 1.09361;
+            return Math.round(distanceYards);
         }
 
-        const avgContainer = document.getElementById("averagesContainer");
-        if (shotHistory.length === 0) {
-            avgContainer.innerHTML = '<p style="font-style: italic; color: #555555;">Track shots to calculate your averages!</p>';
-        } else {
-            let totals = {};
-            let counts = {};
-            
-            for (let i = 0; i < shotHistory.length; i++) {
-                let club = shotHistory[i].club;
-                let dist = shotHistory[i].distance;
-                if (!totals[club]) {
-                    totals[club] = 0;
-                    counts[club] = 0;
-                }
-                totals[club] += dist;
-                counts[club] += 1;
+        // --- Initialize Geolocation Engine ---
+        function startHighAccuracyGPSWatch() {
+            if ("geolocation" in navigator) {
+                const options = {
+                    enableHighAccuracy: true,
+                    timeout: 27000,
+                    maximumAge: 0
+                };
+                
+                watchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        console.log("GPS Location updated via watch system hook.");
+                    },
+                    (error) => {
+                        console.warn("GPS watch notice: ", error.message);
+                    }, 
+                    options
+                );
+            } else {
+                statusMessage.innerHTML = "❌ Error: Geolocation tracking is not supported by your current browser environment.";
             }
-            
-            let averagesList = [];
-            for (let club in totals) {
-                averagesList.push({
-                    club: club,
-                    avg: Math.round(totals[club] / counts[club])
+        }
+
+        // --- Storage Database Management Logic ---
+        function loadScorecardFromStorage() {
+            const savedData = localStorage.getItem('genx_golf_scorecard');
+            if (savedData) {
+                try {
+                    scoreHistory = JSON.parse(savedData);
+                    renderScorecardAndStats();
+                } catch (e) {
+                    scoreHistory = [];
+                }
+            }
+        }
+
+        function saveScorecardToStorage() {
+            localStorage.setItem('genx_golf_scorecard', JSON.stringify(scoreHistory));
+        }
+
+        // --- Interface UI Render Systems ---
+        function renderScorecardAndStats() {
+            // Render basic table scorecard list logs
+            scorecardBody.innerHTML = '';
+            if (scoreHistory.length === 0) {
+                scorecardEmptyText.style.display = 'block';
+            } else {
+                scorecardEmptyText.style.display = 'none';
+                scoreHistory.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong>${item.club}</strong></td>
+                        <td>${item.distance} Yards</td>
+                        <td><button style="padding:4px 8px; font-size:0.8rem; background-color:#e53e3e; color:white; border-radius:4px; box-shadow:none;" onclick="deleteShotItem(${index})">Delete</button></td>
+                    `;
+                    scorecardBody.appendChild(row);
                 });
             }
+
+            // Group statistics array processing for averaging math formulas
+            const statsMap = {};
+            scoreHistory.forEach(item => {
+                if (!statsMap[item.club]) {
+                    statsMap[item.club] = { totalDist: 0, count: 0 };
+                }
+                statsMap[item.club].totalDist += item.distance;
+                statsMap[item.club].count += 1;
+            });
+
+            statsBody.innerHTML = '';
+            const uniqueClubsArr = Object.keys(statsMap);
             
-            averagesList.sort((a, b) => b.avg - a.avg);
-            
-            let avgHtml = '';
-            for (let i = 0; i < averagesList.length; i++) {
-                avgHtml += '<div class="avg-card">' +
-                           '<span class="avg-club">🏌️‍♂️ ' + averagesList[i].club + '</span>' +
-                           '<span class="avg-dist">' + averagesList[i].avg + ' YARDS</span>' +
-                           '</div>';
+            if (uniqueClubsArr.length === 0) {
+                statsEmptyText.style.display = 'block';
+            } else {
+                statsEmptyText.style.display = 'none';
+                uniqueClubsArr.forEach(clubName => {
+                    const data = statsMap[clubName];
+                    const avg = Math.round(data.totalDist / data.count);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong>${clubName}</strong></td>
+                        <td><span style="color:var(--primary-green); font-weight:700;">${avg} Yds</span></td>
+                        <td>${data.count}</td>
+                    `;
+                    statsBody.appendChild(row);
+                });
             }
-            avgContainer.innerHTML = avgHtml;
         }
-    }
 
-    function clearScorecard() {
-        if (confirm("Are you sure you want to erase all shots for this round?")) {
-            shotHistory = [];
-            localStorage.removeItem('golf_shot_history');
-            document.getElementById("distanceDisplay").style.display = "none";
-            teeLat = null;
-            teeLon = null;
-            document.getElementById("click1").disabled = false;
-            document.getElementById("click2").disabled = true;
-            renderTables();
-        }
-    }
+        window.deleteShotItem = function(index) {
+            scoreHistory.splice(index, 1);
+            saveScorecardToStorage();
+            renderScorecardAndStats();
+        };
 
-    renderTables();
-</script>
+        // --- Interaction Event Command Listeners ---
+        clubSelect.addEventListener('change', (e) => {
+            current_club = e.target.value;
+        });
+
+        btnClick1.addEventListener('click', () => {
+            if (!navigator.geolocation) return;
+            
+            statusMessage.innerHTML = "📡 Querying clean satellite coordinates for position 1...";
+            
+            navigator.geolocation.getCurrentPosition((position) => {
+                p1_lat = position.coords.latitude;
+                p1_lon = position.coords.longitude;
+                statusMessage.innerHTML = `🟢 <strong>Tee Position locked!</strong> Walk to your golf ball, select your <strong>${current_club}</strong>, then tap Click 2.`;
+                distanceOutput.innerHTML = "0 YARDS";
+            }, (err) => {
+                statusMessage.innerHTML = "❌ Device position acquisition error. Please verify location privacy toggle locks.";
+            }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+        });
+
+        btnClick2.addEventListener('click', () => {
+            if (p1_lat === null || p1_lon === null) {
+                statusMessage.innerHTML = "⚠️ Cannot match variable. You must map Click 1 down at the tee box marker first!";
+                return;
+            }
+            
+            statusMessage.innerHTML = "📡 Extracting live landing point coordinate tracking details...";
+            
+            navigator.geolocation.getCurrentPosition((position) => {
+                const p2_lat = position.coords.latitude;
+                const p2_lon = position.coords.longitude;
+                
+                const finalCalculatedYards = calculateHaversineDistance(p1_lat, p1_lon, p2_lat, p2_lon);
+                
+                distanceOutput.innerHTML = `${finalCalculatedYards} YARDS`;
+                statusMessage.innerHTML = `🎉 Shot saved! Measured <strong>${finalCalculatedYards} yards</strong> using your <strong>${current_club}</strong>. Ready for next tee area track loop initialization setup layout.`;
+                
+                scoreHistory.unshift({
+                    club: current_club,
+                    distance: finalCalculatedYards
+                });
+                
+                saveScorecardToStorage();
+                renderScorecardAndStats();
+                
+                p1_lat = null;
+                p1_lon = null;
+            }, (err) => {
+                statusMessage.innerHTML = "❌ Failed to read current ball landing position variable coordinates safely.";
+            }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+        });
+
+        btnClearAll.addEventListener('click', () => {
+            if (confirm("Are you sure you want to erase your entire scorecard history round archive databases completely?")) {
+                scoreHistory = [];
+                saveScorecardToStorage();
+                renderScorecardAndStats();
+                distanceOutput.innerHTML = "0 YARDS";
+                statusMessage.innerHTML = "⛳ Stand on the tee box and tap Click 1.";
+            }
+        });
+
+        // --- Core Application Setup Boot Initialization Sequences ---
+        startHighAccuracyGPSWatch();
+        loadScorecardFromStorage();
+    </script>
 </body>
 </html>
+
 
 
 
