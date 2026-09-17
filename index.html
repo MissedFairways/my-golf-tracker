@@ -1,196 +1,416 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Distance Tracker</title>
-  <style>
-    /* Reset & Base Layout Styles */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f4f6f9;
-      color: #333;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    /* Logo & Header Structure */
-    .app-header {
-      display: flex;
-      flex-direction: column; /* Stacks logo cleanly on top of text */
-      align-items: center;    /* Center justifies everything horizontally */
-      text-align: center;
-      margin-bottom: 25px;
-      width: 100%;
-      max-width: 500px;
-    }
-
-    .app-logo {
-      max-width: 150px;       /* Keeps the logo a clean, readable size */
-      height: auto;           /* Prevents stretching or distortion */
-      margin-bottom: 12px;    /* Adds even spacing before text starts */
-    }
-
-    .app-header h1 {
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      color: #1a1a1a;
-    }
-
-    /* Main Distance Tracker UI Elements */
-    .tracker-card {
-      background: #ffffff;
-      border-radius: 20px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-      width: 100%;
-      max-width: 500px;
-      padding: 25px;
-      margin-bottom: 20px;
-    }
-
-    .stats-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-
-    .stat-box {
-      background-color: #f8f9fa;
-      border-radius: 15px;
-      padding: 15px;
-      text-align: center;
-      border: 1px solid #eef1f6;
-    }
-
-    .stat-label {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #888;
-      margin-bottom: 5px;
-    }
-
-    .stat-value {
-      font-size: 24px;
-      font-weight: 700;
-      color: #2c3e50;
-    }
-
-    .control-btn {
-      width: 100%;
-      padding: 16px;
-      border: none;
-      border-radius: 15px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .btn-start {
-      background-color: #27ae60;
-      color: white;
-    }
-
-    .btn-start:hover {
-      background-color: #219653;
-    }
-
-    .btn-stop {
-      background-color: #e74c3c;
-      color: white;
-      display: none;
-    }
-
-    .map-placeholder {
-      background-color: #eef1f6;
-      border: 2px dashed #cbd5e1;
-      border-radius: 15px;
-      height: 180px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #64748b;
-      font-size: 14px;
-      margin-top: 20px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <!-- Inline Apple Touch Icon using a clean SVG golf graphic that iOS Safari won't block -->
+    <link class="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://w3.org' viewBox='0 0 100 100' width='180' height='180'><rect width='100' height='100' fill='%23FFFFFF'/><circle cx='50' cy='50' r='42' fill='none' stroke='%23000000' stroke-width='6'/><circle cx='50' cy='50' r='30' fill='none' stroke='%232E7D32' stroke-width='4'/><path d='M48 25 L48 70 M48 28 L68 38 L48 48 Z' fill='%232E7D32' stroke='%23000000' stroke-width='3' stroke-linejoin='round'/><circle cx='50' cy='70' r='4' fill='%23000000'/></svg>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DISTANCE TRACKER - ADVANCED GPS</title>
+    <style>
+        body {
+            background-color: #FFFFFF;
+            color: #000000;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 15px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        /* New Center-Justified Logo Header Layout */
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 15px;
+            margin-bottom: 25px;
+            background-color: #1a3c22; /* Dark green badge backdrop so your white logo pops! */
+            padding: 20px;
+            border-radius: 16px;
+            border: 3px solid #000000;
+            box-shadow: 4px 4px 0px 0px #000000;
+            text-align: center;
+        }
+        .logo-image {
+            max-width: 140px;
+            height: auto;
+            margin-bottom: 12px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #FFFFFF; /* High contrast white text over green badge box */
+            font-size: 2.2rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            margin-top: 0;
+            margin-bottom: 0;
+            text-transform: uppercase;
+        }
+        h3 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        select {
+            width: 100%;
+            font-size: 18px;
+            font-weight: 700;
+            padding: 12px;
+            border-radius: 12px;
+            border: 3px solid #000000;
+            box-shadow: 4px 4px 0px 0px #000000;
+            background-color: #FFFFFF;
+            margin-bottom: 20px;
+        }
+        .btn-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        button {
+            flex: 1;
+            background-color: #2E7D32;
+            color: #000000;
+            font-size: 18px;
+            font-weight: 900;
+            text-transform: uppercase;
+            padding: 18px 10px;
+            border-radius: 12px;
+            border: 3px solid #000000;
+            box-shadow: 4px 4px 0px 0px #000000;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #A5D6A7;
+            color: #555555;
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+        #status {
+            background-color: #E8F5E9;
+            color: #2E7D32;
+            border: 3px solid #000000;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 800;
+            text-align: center;
+            font-size: 16px;
+            margin-bottom: 25px;
+        }
+        .distance-box {
+            background-color: #FFFFFF;
+            border: 4px solid #000000;
+            border-radius: 16px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 4px 4px 0px 0px #2E7D32;
+            margin-bottom: 25px;
+            display: none;
+        }
+        .distance-label {
+            font-size: 1.1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: #111111;
+        }
+        .distance-number {
+            font-size: 3.2rem;
+            color: #2E7D32;
+            font-weight: 900;
+        }
+        hr {
+            border: 0;
+            height: 2px;
+            background: #000000;
+            margin: 25px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            border: 3px solid #000000;
+        }
+        th, td {
+            border: 2px solid #000000;
+            padding: 10px;
+            text-align: left;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        th {
+            background-color: #E8F5E9;
+        }
+        .delete-shot-btn {
+            background-color: #FFCDD2;
+            color: #B71C1C;
+            border: 2px solid #000000;
+            padding: 5px 8px;
+            font-size: 13px;
+            font-weight: 800;
+            border-radius: 6px;
+            box-shadow: 2px 2px 0px 0px #000000;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+        .avg-card {
+            background-color: #FFFFFF;
+            border: 3px solid #000000;
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 4px 4px 0px 0px #000000;
+        }
+        .avg-club {
+            font-size: 20px;
+            font-weight: 900;
+            color: #000000;
+        }
+        .avg-dist {
+            font-size: 22px;
+            font-weight: 900;
+            color: #2E7D32;
+        }
+        .clear-btn {
+            background-color: #FFCDD2;
+            color: #B71C1C;
+            border: 3px solid #000000;
+            box-shadow: 4px 4px 0px 0px #000000;
+            width: 100%;
+            margin-top: 15px;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- The App Header (Centered Logo + Title Below It) -->
-  <header class="app-header">
-    <img src="Gen X Logo White_for embroidery.png" alt="App Logo" class="app-logo">
-    <h1>DISTANCE TRACKER</h1>
-  </header>
-
-  <!-- Main Tracking Interface Box -->
-  <main class="tracker-card">
-    <div class="stats-container">
-      <div class="stat-box">
-        <p class="stat-label">Total Distance</p>
-        <p class="stat-value" id="distance-display">0.00 mi</p>
-      </div>
-      <div class="stat-box">
-        <p class="stat-label">Time Elapsed</p>
-        <p class="stat-value" id="time-display">00:00</p>
-      </div>
+    <!-- Updated Centered Image Header Frame -->
+    <div class="logo-container">
+        <img class="logo-image" src="Gen X Logo White_for embroidery.png" alt="Gen X Logo">
+        <div class="subtitle">DISTANCE TRACKER</div>
     </div>
 
-    <!-- Active Action Buttons -->
-    <button class="control-btn btn-start" id="start-btn">Start Tracking</button>
-    <button class="control-btn btn-stop" id="stop-btn">Stop Tracking</button>
+    <h3>1. Setup Your Shot</h3>
+    <select id="clubSelect">
+        <option value="Driver">Driver</option>
+        <option value="Mini-Driver">Mini-Driver</option>
+        <option value="3-Wood">3-Wood</option>
+        <option value="4-Iron">4-Iron</option>
+        <option value="5-Iron">5-Iron</option>
+        <option value="6-Iron">6-Iron</option>
+        <option value="7-Iron">7-Iron</option>
+        <option value="8-Iron">8-Iron</option>
+        <option value="9-Iron">9-Iron</option>
+        <option value="Pitching Wedge">Pitching Wedge</option>
+        <option value="Gap Wedge">Gap Wedge</option>
+        <option value="54° Wedge">54° Wedge</option>
+        <option value="60° Wedge">60° Wedge</option>
+    </select>
 
-    <!-- Location Feed Tracker Layout -->
-    <div class="map-placeholder" id="status-feed">
-      GPS Signal Ready • Awaiting Start
+    <hr>
+
+    <h3>2. Track Your Distance</h3>
+    <div class="btn-container">
+        <button id="click1" onclick="handleTeeClick()">🔴 Click 1: Tee Off</button>
+        <button id="click2" onclick="handleBallClick()" disabled>⚪ Click 2: At Ball</button>
     </div>
-  </main>
 
-  <script>
-    // Basic structural framework for your tracker events
-    const startBtn = document.getElementById('start-btn');
-    const stopBtn = document.getElementById('stop-btn');
-    const statusFeed = document.getElementById('status-feed');
-    let trackingInterval;
-    let seconds = 0;
+    <div id="status">⛳ Stand on the tee box and tap Click 1.</div>
 
-    startBtn.addEventListener('click', () => {
-      startBtn.style.display = 'none';
-      stopBtn.style.display = 'block';
-      statusFeed.innerText = "Tracking active... monitoring device coordinates.";
-      statusFeed.style.borderColor = "#27ae60";
-      
-      trackingInterval = setInterval(() => {
-        seconds++;
-        let mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-        let secs = (seconds % 60).toString().padStart(2, '0');
-        document.getElementById('time-display').innerText = `${mins}:${secs}`;
-      }, 1000);
-    });
+    <div id="distanceDisplay" class="distance-box">
+        <div class="distance-label">🏌️‍♂️ Last Shot Distance</div>
+        <div id="yardsNumber" class="distance-number">0 YARDS</div>
+    </div>
 
-    stopBtn.addEventListener('click', () => {
-      clearInterval(trackingInterval);
-      stopBtn.style.display = 'none';
-      startBtn.style.display = 'block';
-      statusFeed.innerText = "Tracking paused. Session distance calculated.";
-      statusFeed.style.borderColor = "#cbd5e1";
-    });
-  </script>
+    <hr>
 
+    <h3>📋 Your Shot History Scorecard</h3>
+    <div id="scorecardTableContainer">
+        <p style="font-style: italic; color: #555555;">No shots recorded yet for this round.</p>
+    </div>
+
+    <hr>
+
+    <h3>📊 Your Club Averages</h3>
+    <div id="averagesContainer">
+        <p style="font-style: italic; color: #555555;">Track shots to calculate your averages!</p>
+    </div>
+
+    <hr>
+    <button class="clear-btn" onclick="clearScorecard()">🗑️ Clear Entire Scorecard</button>
+
+<script>
+    let shotHistory = JSON.parse(localStorage.getItem('golf_shot_history')) || [];
+    let teeLat = null;
+    let teeLon = null;
+    let liveLat = null;
+    let liveLon = null;
+    let liveAccuracy = null;
+
+    if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(
+            function(position) {
+                liveLat = position.coords.latitude;
+                liveLon = position.coords.longitude;
+                liveAccuracy = position.coords.accuracy;
+                
+                let accYards = Math.round(liveAccuracy * 1.09361);
+                
+                if (teeLat === null) {
+                    document.getElementById("status").style.backgroundColor = "#E8F5E9";
+                    document.getElementById("status").style.color = "#2E7D32";
+                    document.getElementById("status").innerHTML = "✅ Satellites locked (GPS Signal Margin: ±" + accYards + " yds). Tap Click 1.";
+                } else {
+                    document.getElementById("status").style.backgroundColor = "#FFF3E0";
+                    document.getElementById("status").style.color = "#E65100";
+                    document.getElementById("status").innerHTML = "🔄 Walking... Antenna Warm (Signal Margin: ±" + accYards + " yds). Tap Click 2 at ball.";
+                }
+            },
+            function(error) {
+                console.log("Watcher error: " + error.code);
+            },
+            { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+        );
+    }
+
+    function calculateHaversine(lat1, lon1, lat2, lon2) {
+        const p = Math.PI / 180;
+        const a = 0.5 - Math.cos((lat2 - lat1) * p)/2 + 
+                Math.cos(lat1 * p) * Math.cos(lat2 * p) * 
+                (1 - Math.cos((lon2 - lon1) * p))/2;
+        return Math.round(2 * 6371000 * Math.asin(Math.sqrt(a)) * 1.09361);
+    }
+
+    function handleTeeClick() {
+        if (liveLat === null || liveLon === null) {
+            alert("Waiting for GPS lock. Give it just a brief moment!");
+            return;
+        }
+        teeLat = liveLat;
+        teeLon = liveLon;
+        
+        document.getElementById("click1").disabled = true;
+        document.getElementById("click2").disabled = false;
+        
+        let accYards = Math.round(liveAccuracy * 1.09361);
+        document.getElementById("status").style.backgroundColor = "#FFF3E0";
+        document.getElementById("status").style.color = "#E65100";
+        document.getElementById("status").innerHTML = "🔄 Walking... Antenna Warm (Signal Margin: ±" + accYards + " yds). Tap Click 2 at ball.";
+    }
+
+    function handleBallClick() {
+        if (teeLat === null || teeLon === null) return;
+        
+        let calculatedYards = calculateHaversine(teeLat, teeLon, liveLat, liveLon);
+        let selectedClub = document.getElementById("clubSelect").value;
+        
+        shotHistory.push({
+            club: selectedClub,
+            distance: calculatedYards,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        
+        localStorage.setItem('golf_shot_history', JSON.stringify(shotHistory));
+        
+        document.getElementById("yardsNumber").innerHTML = calculatedYards + " YARDS";
+        document.getElementById("distanceDisplay").style.display = "block";
+        
+        teeLat = null;
+        teeLon = null;
+        document.getElementById("click1").disabled = false;
+        document.getElementById("click2").disabled = true;
+        
+        let accYards = Math.round(liveAccuracy * 1.09361);
+        document.getElementById("status").style.backgroundColor = "#E8F5E9";
+        document.getElementById("status").style.color = "#2E7D32";
+        document.getElementById("status").innerHTML = "✅ Satellites locked (GPS Signal Margin: ±" + accYards + " yds). Tap Click 1.";
+        
+        renderTables();
+    }
+
+    function deleteShot(index) {
+        shotHistory.splice(index, 1);
+        localStorage.setItem('golf_shot_history', JSON.stringify(shotHistory));
+        renderTables();
+    }
+
+    function renderTables() {
+        const tableContainer = document.getElementById("scorecardTableContainer");
+        if (shotHistory.length === 0) {
+            tableContainer.innerHTML = '<p style="font-style: italic; color: #555555;">No shots recorded yet for this round.</p>';
+        } else {
+            let html = '<table><tr><th>Time</th><th>Club</th><th>Yards</th><th>Action</th></tr>';
+            for (let i = shotHistory.length - 1; i >= 0; i--) {
+                html += '<tr>';
+                html += '<td>' + shotHistory[i].timestamp + '</td>';
+                html += '<td>' + shotHistory[i].club + '</td>';
+                html += '<td>' + shotHistory[i].distance + ' yds</td>';
+                html += '<td><button class="delete-shot-btn" onclick="deleteShot(' + i + ')">🗑️ Delete</button></td>';
+                html += '</tr>';
+            }
+            html += '</table>';
+            tableContainer.innerHTML = html;
+        }
+
+        const avgContainer = document.getElementById("averagesContainer");
+        if (shotHistory.length === 0) {
+            avgContainer.innerHTML = '<p style="font-style: italic; color: #555555;">Track shots to calculate your averages!</p>';
+        } else {
+            let totals = {};
+            let counts = {};
+            
+            for (let i = 0; i < shotHistory.length; i++) {
+                let club = shotHistory[i].club;
+                let dist = shotHistory[i].distance;
+                if (!totals[club]) {
+                    totals[club] = 0;
+                    counts[club] = 0;
+                }
+                totals[club] += dist;
+                counts[club] += 1;
+            }
+            
+            let averagesList = [];
+            for (let club in totals) {
+                averagesList.push({
+                    club: club,
+                    avg: Math.round(totals[club] / counts[club])
+                });
+            }
+            
+            averagesList.sort((a, b) => b.avg - a.avg);
+            
+            let avgHtml = '';
+            for (let i = 0; i < averagesList.length; i++) {
+                avgHtml += '<div class="avg-card">' +
+                           '<span class="avg-club">🏌️‍♂️ ' + averagesList[i].club + '</span>' +
+                           '<span class="avg-dist">' + averagesList[i].avg + ' YARDS</span>' +
+                           '</div>';
+            }
+            avgContainer.innerHTML = avgHtml;
+        }
+    }
+
+    function clearScorecard() {
+        if (confirm("Are you sure you want to erase all shots for this round?")) {
+            shotHistory = [];
+            localStorage.removeItem('golf_shot_history');
+            document.getElementById("distanceDisplay").style.display = "none";
+            teeLat = null;
+            teeLon = null;
+            document.getElementById("click1").disabled = false;
+            document.getElementById("click2").disabled = true;
+            renderTables();
+        }
+    }
+
+    renderTables();
+</script>
 </body>
 </html>
+
 
 
 
