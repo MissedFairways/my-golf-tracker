@@ -466,7 +466,9 @@
                 const finalCalculatedYards = calculateHaversineDistance(p1_lat, p1_lon, p2_lat, p2_lon);
                 
                 distanceOutput.innerHTML = `${finalCalculatedYards} YARDS`;
-                statusMessage.innerHTML = `🎉 Shot saved! Measured <strong>${finalCalculatedYards} yards</strong> using your <strong>${current_club}</strong>. Ready for next tee area track loop initialization setup layout.`;
+                
+                // Cleaned up text string output to remove technical placeholder wording
+                statusMessage.innerHTML = `🎉 Shot saved! Measured <strong>${finalCalculatedYards} yards</strong> using your <strong>${current_club}</strong>.`;
                 
                 scoreHistory.unshift({
                     club: current_club,
@@ -499,6 +501,7 @@
     </script>
 </body>
 </html>
+
 
 
 
