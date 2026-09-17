@@ -297,7 +297,7 @@
             <button id="btnClearAll" class="btn-clear">🗑 Clear Entire Scorecard</button>
         </section>
     </main>
-    <script>
+        <script>
         // --- Core Application State variables ---
         let p1_lat = null;
         let p1_lon = null;
@@ -431,76 +431,6 @@
             renderScorecardAndStats();
         };
 
-        // --- Interaction Event Command Listeners ---
-        clubSelect.addEventListener('change', (e) => {
-            current_club = e.target.value;
-        });
-
-        btnClick1.addEventListener('click', () => {
-            if (!navigator.geolocation) return;
-            
-            statusMessage.innerHTML = "📡 Querying clean satellite coordinates for position 1...";
-            
-            navigator.geolocation.getCurrentPosition((position) => {
-                p1_lat = position.coords.latitude;
-                p1_lon = position.coords.longitude;
-                statusMessage.innerHTML = `🟢 <strong>Tee Position locked!</strong> Walk to your golf ball, select your <strong>${current_club}</strong>, then tap Click 2.`;
-                distanceOutput.innerHTML = "0 YARDS";
-            }, (err) => {
-                statusMessage.innerHTML = "❌ Device position acquisition error. Please verify location privacy toggle locks.";
-            }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
-        });
-
-        btnClick2.addEventListener('click', () => {
-            if (p1_lat === null || p1_lon === null) {
-                statusMessage.innerHTML = "⚠️ Cannot match variable. You must map Click 1 down at the tee box marker first!";
-                return;
-            }
-            
-            statusMessage.innerHTML = "📡 Extracting live landing point coordinate tracking details...";
-            
-            navigator.geolocation.getCurrentPosition((position) => {
-                const p2_lat = position.coords.latitude;
-                const p2_lon = position.coords.longitude;
-                
-                const finalCalculatedYards = calculateHaversineDistance(p1_lat, p1_lon, p2_lat, p2_lon);
-                
-                distanceOutput.innerHTML = `${finalCalculatedYards} YARDS`;
-                
-                // Cleaned up text string output to remove technical placeholder wording
-                statusMessage.innerHTML = `🎉 Shot saved! Measured <strong>${finalCalculatedYards} yards</strong> using your <strong>${current_club}</strong>.`;
-                
-                scoreHistory.unshift({
-                    club: current_club,
-                    distance: finalCalculatedYards
-                });
-                
-                saveScorecardToStorage();
-                renderScorecardAndStats();
-                
-                p1_lat = null;
-                p1_lon = null;
-            }, (err) => {
-                statusMessage.innerHTML = "❌ Failed to read current ball landing position variable coordinates safely.";
-            }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
-        });
-
-        btnClearAll.addEventListener('click', () => {
-            if (confirm("Are you sure you want to erase your entire scorecard history round archive databases completely?")) {
-                scoreHistory = [];
-                saveScorecardToStorage();
-                renderScorecardAndStats();
-                distanceOutput.innerHTML = "0 YARDS";
-                statusMessage.innerHTML = "⛳ Stand on the tee box and tap Click 1.";
-            }
-        });
-
-        // --- Core Application Setup Boot Initialization Sequences ---
-        startHighAccuracyGPSWatch();
-        loadScorecardFromStorage();
-    </script>
-</body>
-</html>
 
 
 
