@@ -8,8 +8,210 @@
     <!-- iPhone Home Screen Custom App Button Icon Configuration -->
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
-    <!-- Linked External Style Sheet -->
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        :root {
+            --primary-green: #1b4332;
+            --accent-gold: #d4af37;
+            --light-bg: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-dark: #2d3748;
+            --text-light: #718096;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            line-height: 1.5;
+            padding: 10px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .brand-header {
+            background-color: var(--primary-green);
+            color: #ffffff;
+            text-align: center;
+            padding: 15px 10px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 15px;
+        }
+
+        .brand-logo {
+            max-width: 185px;
+            height: auto;
+            display: block;
+            margin: 0 auto 5px auto;
+        }
+
+        .brand-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .retro-container {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            color: var(--primary-green);
+            margin-bottom: 12px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 5px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background-color: #fff;
+            color: var(--text-dark);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        select:focus {
+            border-color: var(--primary-green);
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 14px 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-click1 {
+            background-color: #e53e3e;
+            color: white;
+        }
+
+        .btn-click2 {
+            background-color: #3182ce;
+            color: white;
+        }
+
+        .btn-clear {
+            background-color: #718096;
+            color: white;
+            width: 100%;
+            padding: 10px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .status-box {
+            background-color: #edf2f7;
+            border-left: 4px solid var(--primary-green);
+            padding: 10px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+        }
+
+        .distance-display {
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary-green), #2d6a4f);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .distance-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            margin-bottom: 2px;
+        }
+
+        .distance-num {
+            font-size: 3rem;
+            font-weight: 900;
+            font-family: monospace;
+        }
+
+        .scorecard-table, .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .scorecard-table th, .stats-table th {
+            background-color: #edf2f7;
+            color: var(--text-dark);
+            text-align: left;
+            padding: 8px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .scorecard-table td, .stats-table td {
+            padding: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .scorecard-table tr:nth-child(even), .stats-table tr:nth-child(even) {
+            background-color: #f7fafc;
+        }
+
+        .empty-text {
+            color: var(--text-light);
+            font-style: italic;
+            text-align: center;
+            padding: 10px 0;
+        }
+    </style>
 </head>
 <body>
 
@@ -51,7 +253,7 @@
                 ⛳ Stand on the tee box and tap Click 1.
             </div>
             <div class="distance-display">
-                <div class="distance-label">🏌🏽‍♂️ Last Shot Distance</div>
+                <div class="distance-label">🏌‍♂️ Last Shot Distance</div>
                 <div id="distanceOutput" class="distance-num">0 YARDS</div>
             </div>
         </section>
@@ -68,10 +270,11 @@
                         </tr>
                     </thead>
                     <tbody id="scorecardBody">
-                        <!-- Dynamic rows appear here -->
+                        <!-- Dynamic rows fit here -->
                     </tbody>
                 </table>
             </div>
+            <div id="scorecardEmptyText" class="empty-text">No shots recorded yet for this round.</div>
         </section>
 
         <section class="retro-container">
@@ -85,19 +288,191 @@
                             <th>Shots</th>
                         </tr>
                     </thead>
-                    <tbody id="averagesBody">
-                        <!-- Dynamic metrics appear here -->
+                    <tbody id="statsBody">
+                        <!-- Dynamic rows fit here -->
                     </tbody>
                 </table>
             </div>
+            <div id="statsEmptyText" class="empty-text">Track shots to calculate your averages!</div>
             <button id="btnClearAll" class="btn-clear">🗑 Clear Entire Scorecard</button>
         </section>
     </main>
+    <script>
+        // Global State Arrays
+let shotHistory = [];
+let teeCoordinates = null;
 
-    <!-- Linked External Application Logic -->
-    <script src="app.js"></script>
+// Target Visual Elements from your HTML
+const btnClick1 = document.getElementById('btnClick1');
+const btnClick2 = document.getElementById('btnClick2');
+const distanceOutput = document.getElementById('distanceOutput');
+const clubSelect = document.getElementById('clubSelect');
+const statusMessage = document.getElementById('statusMessage');
+const scorecardTable = document.getElementById('scorecardTable').getElementsByTagName('tbody')[0] || document.getElementById('scorecardTable');
+const statsTable = document.getElementById('statsTable').getElementsByTagName('tbody')[0] || document.getElementById('statsTable');
+const btnClearAll = document.getElementById('btnClearAll');
+
+// 1. Local Storage Sync Routines (The Fix for Safari)
+function saveScorecardToStorage() {
+    localStorage.setItem('golf_gps_app_history', JSON.stringify(shotHistory));
+}
+
+function loadScorecardFromStorage() {
+    const savedData = localStorage.getItem('golf_gps_app_history');
+    if (savedData) {
+        shotHistory = JSON.parse(savedData);
+        renderTables();
+    }
+}
+
+// 2. Haversine Yardage Math Formula
+function calculateYards(lat1, lon1, lat2, lon2) {
+    const earthRadiusMeters = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distanceMeters = earthRadiusMeters * c;
+    
+    return Math.round(distanceMeters * 1.09361);
+}
+
+// 3. Button Action Listeners & GPS Trackers
+btnClick1.addEventListener('click', () => {
+    statusMessage.textContent = "⏳ Accessing GPS coordinates...";
+    
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+            teeCoordinates = {
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude
+            };
+            statusMessage.textContent = "🎯 Click 1 Saved! Walk to your ball and tap Click 2.";
+        }, (err) => {
+            statusMessage.textContent = "❌ GPS Lock Failure. Enable location permissions in Safari.";
+        }, { enableHighAccuracy: true, timeout: 10000 });
+    } else {
+        statusMessage.textContent = "❌ Geolocation unsupported on this device.";
+    }
+});
+
+btnClick2.addEventListener('click', () => {
+    if (!teeCoordinates) {
+        statusMessage.textContent = "⚠️ Tap 'Click 1: Tee Off' first before recording your ball position!";
+        return;
+    }
+    
+    statusMessage.textContent = "⏳ Calculating distance...";
+    
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+            const calculatedDistance = calculateYards(
+                teeCoordinates.latitude,
+                teeCoordinates.longitude,
+                pos.coords.latitude,
+                pos.coords.longitude
+            );
+            
+            const currentClub = clubSelect.value;
+            distanceOutput.textContent = `${calculatedDistance} YARDS`;
+            
+            // Push shot data to memory array
+            shotHistory.push({
+                timestampId: Date.now(),
+                club: currentClub,
+                yards: calculatedDistance
+            });
+            
+            // SAVE IMMEDIATELY to stop data loss on reload
+            saveScorecardToStorage();
+            
+            // Refresh table views
+            renderTables();
+            
+            statusMessage.textContent = `✅ Saved ${calculatedDistance} yds with ${currentClub}.`;
+            teeCoordinates = null; // Clear tee spot for next shot
+        }, (err) => {
+            statusMessage.textContent = "❌ Target location lock failed.";
+        }, { enableHighAccuracy: true, timeout: 10000 });
+    }
+});
+
+// 4. Dynamic Interface Render Engines
+window.removeShot = function(timestampId) {
+    shotHistory = shotHistory.filter(shot => shot.timestampId !== timestampId);
+    saveScorecardToStorage(); // Update storage after a deletion
+    renderTables();
+};
+
+function renderTables() {
+    scorecardTable.innerHTML = '';
+    statsTable.innerHTML = '';
+    
+    if (shotHistory.length === 0) {
+        scorecardTable.innerHTML = `<tr><td colspan="3" class="empty-text">No shots recorded yet for this round.</td></tr>`;
+        statsTable.innerHTML = `<tr><td colspan="3" class="empty-text">Track shots to calculate your averages!</td></tr>`;
+        return;
+    }
+    
+    // Sort history to show newest shot at the top
+    const reversedHistory = [...shotHistory].reverse();
+    
+    reversedHistory.forEach(shot => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${shot.club}</strong></td>
+            <td>${shot.yards} Yds</td>
+            <td><button style="padding:4px 8px; font-size:0.8rem; background-color:#fed7d7; color:#c53030; border-radius:4px; box-shadow:none;" onclick="window.removeShot(${shot.timestampId})">Remove</button></td>
+        `;
+        scorecardTable.appendChild(tr);
+    });
+    
+    // Calculate Averages for the Stats Table
+    const metrics = {};
+    shotHistory.forEach(shot => {
+        if (!metrics[shot.club]) {
+            metrics[shot.club] = { aggregate: 0, count: 0 };
+        }
+        metrics[shot.club].aggregate += shot.yards;
+        metrics[shot.club].count++;
+    });
+    
+    Object.keys(metrics).forEach(club => {
+        const averageValue = Math.round(metrics[club].aggregate / metrics[club].count);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${club}</strong></td>
+            <td>${averageValue} Yds</td>
+            <td>${metrics[club].count}</td>
+        `;
+        statsTable.appendChild(tr);
+    });
+}
+
+// 5. Clear All History Button Listener
+btnClearAll.addEventListener('click', () => {
+    if (confirm("🚨 Wipe entire round history and reset your club metrics?")) {
+        shotHistory = [];
+        localStorage.removeItem('golf_gps_app_history');
+        distanceOutput.textContent = '0 YARDS';
+        statusMessage.textContent = '⛳ Stand on the tee box and tap Click 1.';
+        renderTables();
+    }
+});
+
+// 6. App Boot Lifecyle Hook (Loads saved data when Safari opens)
+document.addEventListener("DOMContentLoaded", () => {
+    loadScorecardFromStorage();
+});
+
+    </script>
 </body>
 </html>
+
 
 
 
