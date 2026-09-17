@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <!-- Inline Apple Touch Icon using a clean SVG golf graphic that iOS Safari won't block -->
-    <link class="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://w3.org' viewBox='0 0 100 100' width='180' height='180'><rect width='100' height='100' fill='%23FFFFFF'/><circle cx='50' cy='50' r='42' fill='none' stroke='%23000000' stroke-width='6'/><circle cx='50' cy='50' r='30' fill='none' stroke='%232E7D32' stroke-width='4'/><path d='M48 25 L48 70 M48 28 L68 38 L48 48 Z' fill='%232E7D32' stroke='%23000000' stroke-width='3' stroke-linejoin='round'/><circle cx='50' cy='70' r='4' fill='%23000000'/></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://w3.org' viewBox='0 0 100 100' width='180' height='180'><rect width='100' height='100' fill='%23FFFFFF'/><circle cx='50' cy='50' r='42' fill='none' stroke='%23000000' stroke-width='6'/><circle cx='50' cy='50' r='30' fill='none' stroke='%232E7D32' stroke-width='4'/><path d='M48 25 L48 70 M48 28 L68 38 L48 48 Z' fill='%232E7D32' stroke='%23000000' stroke-width='3' stroke-linejoin='round'/><circle cx='50' cy='70' r='4' fill='%23000000'/></svg>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DISTANCE TRACKER - ADVANCED GPS</title>
     <style>
@@ -15,7 +15,7 @@
             max-width: 500px;
             margin: 0 auto;
         }
-        /* New Center-Justified Logo Header Layout */
+        /* Center-Justified Custom Logo Header Layout */
         .logo-container {
             display: flex;
             flex-direction: column;
@@ -31,14 +31,14 @@
             text-align: center;
         }
         .logo-image {
-            max-width: 140px;
+            max-width: 185px;       /* Made 30% larger (increased from 140px) */
             height: auto;
             margin-bottom: 12px;
         }
         .subtitle {
             text-align: center;
-            color: #FFFFFF; /* High contrast white text over green badge box */
-            font-size: 2.2rem;
+            color: #FFFFFF; 
+            font-size: 1.5rem;       /* Made 30% smaller (decreased from 2.2rem) */
             font-weight: 900;
             letter-spacing: -0.5px;
             margin-top: 0;
@@ -410,6 +410,7 @@
 </script>
 </body>
 </html>
+
 
 
 
